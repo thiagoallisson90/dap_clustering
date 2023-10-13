@@ -58,18 +58,21 @@ def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
         'elbow': 'distortion',
         'silhouette': 'silhouette',
         'calinski': 'calinski_harabasz',
-        'gap': 'gap_statistic'
+        #'gap': 'gap_statistic'
     }
 
     print(f'Running ({model_name},{metric_name})')
     print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
-    min_clusters = 1 if metric_name in ['elbow', 'gap'] else 2
+    #min_clusters = 1 if metric_name in ['elbow', 'gap'] else 2
+    min_clusters = 10
     max_clusters = 30
     num_iter = 30
     n_refs = 500 if model_name == 'kmeans' else 50
 
     opt_dir = f'data/{model_name}/{metric_name}'
+
+    scores = []
 
     if not metric_name == 'gap':
         for i in range(num_iter): 
@@ -80,25 +83,31 @@ def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
             k = visualizer.elbow_value_
             score = visualizer.elbow_score_
 
-            write_scores({'k': k, 'score': score}, f'{opt_dir}/daps.csv')
+            #write_scores({'k': k, 'score': score}, f'{opt_dir}/daps.csv')
+            scores.append({'k': k, 'score': score})
             
             print(f'k defined in the iteration {i+1} with {metric_name} method = {k}')
             plt.clf()
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     else:
         for i in range(num_iter-10):
-            k, gap_history = optimalK(data, nrefs=n_refs, maxClusters=max_clusters+1, model_name=model_name)            
+            k, gap_history = optimalK(data, nrefs=n_refs, min_clusters=10, maxClusters=max_clusters+1, model_name=model_name)            
             score = gap_history['gap'][k-1]
 
-            write_scores({'k': k, 'score': score}, f'{opt_dir}/daps.csv')
+            #write_scores({'k': k, 'score': score}, f'{opt_dir}/daps.csv')
+            scores.append({'k': k, 'score': score})
             
             print(f'k defined in the iteration {i+1} with {metric_name} = {k}')
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
+    
+    pd.DataFrame(scores).to_csv(f'{opt_dir}/daps.csv', index=False, header=False)
 
 def opt_kmodels():
     models_name = ['kmeans', 'kmedoids']
-    #metric_names = ['elbow', 'silhouette', 'calinski', 'gap']    
-    metric_names = ['gap']
+    metric_names = ['elbow', 'silhouette', 'calinski', 
+                    #'gap'
+                   ]    
+    #metric_names = ['gap']
 
     ed_coords = generate_ed_coords()
     write_coords(ed_coords, ed_pos_file)
@@ -110,11 +119,11 @@ def opt_kmodels():
 def capex_opex_calc(n_gws):
     CBs, Cins, Cset, Txinst = 1, 2, 0.1, 4
 
-    Cman = 12.5/100
-    t=1
+    Cman = 0.125
+    Clease, Celet, Ctrans, t = 1, 1, 0.1, 1
 
-    capex = n_gws *(CBs + Cins + Cset + Txinst)
-    opex = (Cman*capex + n_gws)*t
+    capex = n_gws * (CBs + Cins + Cset + Txinst)
+    opex = (Cman*capex + n_gws * (Clease + Celet + Ctrans)) * t
 
     return capex, opex
 
@@ -436,16 +445,21 @@ def opt_cmeans():
     num_iters = 20
     max_clusters = 30
 
+    scores = []
+
     for i in range(num_iters):
-        k, results, _ = optimalC2(ed_coords.T, nrefs=100, maxClusters=max_clusters+1)
+        k, results, _ = optimalC2(ed_coords.T, nrefs=100, min_clusters=10, maxClusters=max_clusters+1)
         score = results['gap'][k-1]
 
-        write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
+        #write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
+        scores.append({'k': k, 'score': score})
 
         print(f'k defined in the iteration {i+1} with gap statistics = {k}')
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
+    
+    pd.DataFrame(scores).to_csv(f'data/cmeans/gap/daps.csv', index=False, header=False)
 
 if __name__ == '__main__':
-    # opt_kmodels()
-    # opt_cmeans()
-    simulate_models()
+    opt_kmodels()
+    opt_cmeans()
+    # simulate_models()

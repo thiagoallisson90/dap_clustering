@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 from sklearn_extra.cluster import KMedoids
 from skfuzzy.cluster import cmeans
 
-def optimalK(data, nrefs=3, maxClusters=15, model_name='kmeans'):
+def optimalK(data, nrefs=3, min_clusters = 1, maxClusters=15, model_name='kmeans'):
     """
     Calculates KMeans optimal K using Gap Statistic from Tibshirani, Walther, Hastie
     Params:
@@ -14,9 +14,9 @@ def optimalK(data, nrefs=3, maxClusters=15, model_name='kmeans'):
         maxClusters: Maximum number of clusters to test for
     Returns: (gaps, optimalK)
     """
-    gaps = np.zeros((len(range(1, maxClusters)),))
+    gaps = np.zeros((len(range(min_clusters, maxClusters)),))
     resultsdf = []
-    for gap_index, k in enumerate(range(1, maxClusters)):
+    for gap_index, k in enumerate(range(min_clusters, maxClusters)):
 
         # Holder for reference dispersion results
         refDisps = np.zeros(nrefs)
@@ -215,7 +215,7 @@ def calculate_dispersions(c, randomReference):
         BWkb = np.log(np.mean(jm))
         return BWkb
 
-def optimalC2(data, nrefs=3, maxClusters=15):
+def optimalC2(data, nrefs=3, min_clusters=1, maxClusters=15):
     """
     Calculates Fuzzy C-Means optimal C using Gap Statistic from Sentelle, Hong, Georgiopoulos, Anagnostopoulos
     Params:
@@ -225,20 +225,18 @@ def optimalC2(data, nrefs=3, maxClusters=15):
     Returns: (k, resultsdf, gp)
     """
     
-    sdk = np.zeros(len(range(0, maxClusters)))
-    sError = np.zeros(len(range(0, maxClusters)))
-    BWkbs = np.zeros(len(range(0, nrefs)))
-    Wks = np.zeros(len(range(0, maxClusters)))
-    Wkbs = np.zeros(len(range(0, maxClusters)))
-    gaps_sks = np.zeros((len(range(1, maxClusters))))
+    sdk = np.zeros(len(range(min_clusters, maxClusters)))
+    sError = np.zeros(len(range(min_clusters, maxClusters)))
+    BWkbs = np.zeros(len(range(min_clusters, nrefs)))
+    Wks = np.zeros(len(range(min_clusters, maxClusters)))
+    Wkbs = np.zeros(len(range(min_clusters, maxClusters)))
+    gaps_sks = np.zeros((len(range(min_clusters, maxClusters))))
     gp = []
 
-    gaps = np.zeros((len(range(1, maxClusters)),))
+    gaps = np.zeros((len(range(min_clusters, maxClusters)),))
     resultsdf = []
 
-    num_cores = joblib.cpu_count()  # Adjust this to control the number of CPU cores to use in parallel computations
-
-    for gap_index, c in enumerate(range(1, maxClusters)):
+    for gap_index, c in enumerate(range(min_clusters, maxClusters)):
         # Use joblib to calculate reference dispersions in parallel
         BWkbs = joblib.Parallel(n_jobs=-1)(
             joblib.delayed(calculate_dispersions)(c, np.random.random_sample(size=data.shape)) for i in range(nrefs)
@@ -259,7 +257,7 @@ def optimalC2(data, nrefs=3, maxClusters=15):
 
         sError[gap_index] = sdk[gap_index] * np.sqrt(1 + 1 / nrefs)
 
-    for k, _ in enumerate(range(1, maxClusters)):
+    for k, _ in enumerate(range(min_clusters, maxClusters)):
         if not k == len(gaps) - 1:
             if gaps[k] >= gaps[k + 1] - sError[k + 1]:
                 gaps_sks[k] = gaps[k] - gaps[k + 1] - sError[k + 1]

@@ -26,4 +26,3 @@ def optmizeK():
 
 if __name__ == '__main__':
   optmizeK()
-
