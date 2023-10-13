@@ -70,7 +70,7 @@ def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
     num_iter = 30
     n_refs = 500 if model_name == 'kmeans' else 50
 
-    opt_dir = f'data/{model_name}/{metric_name}'
+    opt_dir = f'{data_dir}/{model_name}/{metric_name}'
 
     scores = []
 
@@ -447,8 +447,11 @@ def opt_cmeans():
 
     scores = []
 
+    print('Running (cmeans,gap)')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
     for i in range(num_iters):
-        k, results, _ = optimalC2(ed_coords.T, nrefs=100, min_clusters=10, maxClusters=max_clusters+1)
+        k, results, _ = optimalC2(ed_coords.T, nrefs=120, min_clusters=10, maxClusters=max_clusters+1)
         score = results['gap'][k-1]
 
         #write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
@@ -460,6 +463,6 @@ def opt_cmeans():
     pd.DataFrame(scores).to_csv(f'data/cmeans/gap/daps.csv', index=False, header=False)
 
 if __name__ == '__main__':
-    opt_kmodels()
+    #opt_kmodels()
     opt_cmeans()
     # simulate_models()
