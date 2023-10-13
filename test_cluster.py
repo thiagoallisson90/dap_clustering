@@ -19,6 +19,8 @@ def generate_ed_coords(n_points=2000, axis_range = 10000):
   np.random.seed(42)
   x = np.random.uniform(0, axis_range, n_points)
   y = np.random.uniform(0, axis_range, n_points)
+
+  np.random.seed(None)
   
   return np.column_stack((x, y))
 
