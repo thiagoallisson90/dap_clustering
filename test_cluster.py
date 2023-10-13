@@ -96,7 +96,7 @@ def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
 
 def opt_kmodels():
-    models_name = ['kmedoids']
+    models_name = ['kmeans', 'kmedoids']
     #metric_names = ['elbow', 'silhouette', 'calinski', 'gap']    
     metric_names = ['gap']
 
@@ -457,5 +457,5 @@ def opt_cmeans():
 
 if __name__ == '__main__':
     opt_kmodels()
-    #opt_cmeans()
+    opt_cmeans()
     #simulate_models()
