@@ -45,7 +45,7 @@ def write_scores(data, filename):
     with open(f'{base_dir}/{filename}', mode='a') as file:
         file.write(f'{data["k"]},{data["score"]}\n')
 
-def opt_kmodel(data, model_name='kmeans', metric_name='elbow'):
+def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
     from sklearn.cluster import KMeans
     from sklearn_extra.cluster import KMedoids
 
@@ -61,10 +61,6 @@ def opt_kmodel(data, model_name='kmeans', metric_name='elbow'):
         'gap': 'gap_statistic'
     }
 
-    fn_obj = lambda oldScore, newScore: oldScore > newScore if metric_name == 'elbow' \
-        else lambda oldScore, newScore: oldScore < newScore
-
-
     print(f'Running ({model_name},{metric_name})')
     print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
@@ -74,64 +70,38 @@ def opt_kmodel(data, model_name='kmeans', metric_name='elbow'):
     n_refs = 500 if model_name == 'kmeans' else 50
 
     opt_dir = f'data/{model_name}/{metric_name}'
-    best_k = -1
-    best_score = -1
-    plot_score = None
 
     if not metric_name == 'gap':
         for i in range(num_iter): 
             visualizer = KElbowVisualizer(models[model_name], metric=metrics[metric_name],
-                                          k=(min_clusters, max_clusters+1), timings=False)    
+                                          k=(min_clusters, max_clusters+1), timings=False, n_jobs=-1)    
             visualizer.fit(data)
             
             k = visualizer.elbow_value_
             score = visualizer.elbow_score_
-            if(i == 0 or fn_obj(best_score, score)):
-                best_k = k
-                best_score = score
-                plot_score = visualizer.k_scores_
 
             write_scores({'k': k, 'score': score}, f'{opt_dir}/daps.csv')
             
-            print(f'k defined in iteration {i+1} with {metric_name} method = {k}')
+            print(f'k defined in the iteration {i+1} with {metric_name} method = {k}')
+            plt.clf()
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     else:
         for i in range(num_iter-10):
             k, gap_history = optimalK(data, nrefs=n_refs, maxClusters=max_clusters+1, model_name=model_name)            
             score = gap_history['gap'][k-1]
-            
-            if(i == 0 or best_score < score):
-                best_k = k
-                best_score = score
-                plot_score = gap_history['gap']
 
             write_scores({'k': k, 'score': score}, f'{opt_dir}/daps.csv')
             
-            print(f'k defined in iteration {i+1} with {metric_name} = {k}')
+            print(f'k defined in the iteration {i+1} with {metric_name} = {k}')
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
 
-    print(f'{best_k} DAPs have score equals to {best_score}')
-
-    plt.clf()
-
-    plt.plot(range(min_clusters, max_clusters+1, 1), plot_score)
-    plt.title(f'DAP optimal quantity - {model_name} and {metric_name} method (k={best_k})', fontsize=13)
-    plt.xlabel('k', fontsize=12)
-    plt.ylabel(metric_name, fontsize=12)
-    plt.xticks(fontsize=10)
-    plt.yticks(fontsize=10)
-    plt.savefig(f'{img_dir}/{model_name}/{metric_name}/{best_k}_daps.png')    
-    plt.clf()
-    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-
 def opt_kmodels():
-    models_name = ['kmeans', 'kmedoids']
-    metric_names = ['elbow', 'silhouette', 'calinski', 'gap']    
+    models_name = ['kmedoids']
+    #metric_names = ['elbow', 'silhouette', 'calinski', 'gap']    
+    metric_names = ['gap']
 
     ed_coords = generate_ed_coords()
     write_coords(ed_coords, ed_pos_file)
-
-    ks = dict()
 
     for model in models_name:
         for metric in metric_names:
@@ -437,14 +407,18 @@ def simulate_models():
         'kmedoids': lambda k: KMedoids(k),
     }
     metric_names = ['gap']
-    ks = {}
+    ks = {
+        'kmeans': 16,
+        'kmedoids': 16,
+        'cmeans':  21
+    }
 
     for model in model_names:
         for metric in metric_names:
-            df = pd.read_csv(f'{base_dir}/data/{model}/{metric}/daps.csv', names=['k', 'gap'])
-            k = df.loc[df['gap'].idxmax(), 'k']
-            ks[model] = k
-            clf = models[model](k)
+            #df = pd.read_csv(f'{base_dir}/data/{model}/{metric}/daps.csv', names=['k', 'gap'])
+            #k = df.loc[df['gap'].idxmax(), 'k']
+            #ks[model] = k
+            clf = models[model](ks[model])
             clf.fit(ed_coords)
             centroids = clf.cluster_centers_
             plot_kclusters(ed_coords, clf, model)
@@ -483,5 +457,5 @@ def opt_cmeans():
 
 if __name__ == '__main__':
     opt_kmodels()
-    opt_cmeans()
-    simulate_models()
+    #opt_cmeans()
+    #simulate_models()
