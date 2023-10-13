@@ -1,3 +1,4 @@
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
@@ -81,15 +82,15 @@ def optimalC(data, nrefs=3, maxClusters=15):
             cntr, u, u0, d, jm, p, fpc = cmeans(data=randomReference, c=c, m=2, error=0.005, maxiter=1000)
 
             # Holder for reference dispersion results
-            #BWkbs[i] = np.log(jm[len(jm)-1])
-            BWkbs[i] = np.log(np.mean(jm))
+            BWkbs[i] = np.log(jm[len(jm)-1])
+            #BWkbs[i] = np.log(np.mean(jm))
 
         # Fit cluster to original data and create dispersion
         cntr, u, u0, d, jm, p, fpc = cmeans(data=data, c=c, m=2, error=0.005, maxiter=1000)
 
         # Holder for original dispersion results
-        #Wks[gap_index] = np.log(jm[len(jm)-1])
-        Wks[gap_index] = np.log(np.mean(jm))
+        Wks[gap_index] = np.log(jm[len(jm)-1])
+        #Wks[gap_index] = np.log(np.mean(jm))
 
         # Calculate gap statistic
         gap = sum(BWkbs)/nrefs - Wks[gap_index]
@@ -137,7 +138,6 @@ def optimalC(data, nrefs=3, maxClusters=15):
 
 
 def optimalC1(data, nrefs=3, maxClusters=15):
-    print('optimalC1')
     """
     Calculates KMeans optimal K using Gap Statistic from Tibshirani, Walther, Hastie
     Params:
@@ -209,3 +209,75 @@ def points_limit(data, k, maxPoints=100):
         if a == k:
             desorganized = False
     return k
+
+def calculate_dispersions(c, randomReference):
+        cntr, u, u0, d, jm, p, fpc = cmeans(data=randomReference, c=c, m=2, error=0.005, maxiter=1000)
+        BWkb = np.log(np.mean(jm))
+        return BWkb
+
+def optimalC2(data, nrefs=3, maxClusters=15):
+    """
+    Calculates Fuzzy C-Means optimal C using Gap Statistic from Sentelle, Hong, Georgiopoulos, Anagnostopoulos
+    Params:
+        data: ndarray of shape (n_samples, n_features)
+        nrefs: number of sample reference datasets to create
+        maxClusters: Maximum number of clusters to test for
+    Returns: (k, resultsdf, gp)
+    """
+    
+    sdk = np.zeros(len(range(0, maxClusters)))
+    sError = np.zeros(len(range(0, maxClusters)))
+    BWkbs = np.zeros(len(range(0, nrefs)))
+    Wks = np.zeros(len(range(0, maxClusters)))
+    Wkbs = np.zeros(len(range(0, maxClusters)))
+    gaps_sks = np.zeros((len(range(1, maxClusters))))
+    gp = []
+
+    gaps = np.zeros((len(range(1, maxClusters)),))
+    resultsdf = []
+
+    num_cores = joblib.cpu_count()  # Adjust this to control the number of CPU cores to use in parallel computations
+
+    for gap_index, c in enumerate(range(1, maxClusters)):
+        # Use joblib to calculate reference dispersions in parallel
+        BWkbs = joblib.Parallel(n_jobs=-1)(
+            joblib.delayed(calculate_dispersions)(c, np.random.random_sample(size=data.shape)) for i in range(nrefs)
+        )
+
+        cntr, u, u0, d, jm, p, fpc = cmeans(data=data, c=c, m=2, error=0.005, maxiter=1000)
+
+        Wks[gap_index] = np.log(np.mean(jm))
+
+        gap = sum(BWkbs) / nrefs - Wks[gap_index]
+
+        gaps[gap_index] = gap
+
+        resultsdf.append({'clusterCount': c, 'gap': gap})
+
+        Wkbs[gap_index] = sum(BWkbs) / nrefs
+        sdk[gap_index] = np.sqrt((sum((BWkbs - Wkbs[gap_index])**2)) / nrefs)
+
+        sError[gap_index] = sdk[gap_index] * np.sqrt(1 + 1 / nrefs)
+
+    for k, _ in enumerate(range(1, maxClusters)):
+        if not k == len(gaps) - 1:
+            if gaps[k] >= gaps[k + 1] - sError[k + 1]:
+                gaps_sks[k] = gaps[k] - gaps[k + 1] - sError[k + 1]
+        else:
+            gaps_sks[k] = -20
+
+        gp.append({'clusterCount': k+1, 'Gap_sk': gaps_sks[k]})
+
+    iter_points = [x[0]+1 for x in sorted([y for y in enumerate(gaps)], key=lambda x: x[1], reverse=True)[:3]]
+    iter_points_sk = [x[0]+1 for x in sorted([y for y in enumerate(gaps_sks)], key=lambda x: x[1], reverse=True)[:3]]
+    a = list(filter(lambda g: g in iter_points, iter_points_sk))
+    if a:
+        if not min(a) == 1:
+            k = min(a)
+        else:
+            a.remove(1)
+            k = min(a)
+    else:
+        k = min(iter_points_sk)
+
+    return k, pd.DataFrame(resultsdf), pd.DataFrame(gp)

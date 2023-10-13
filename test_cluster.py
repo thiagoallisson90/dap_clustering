@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from yellowbrick.cluster import KElbowVisualizer
-from gapstatistic import optimalK, optimalC
+from gapstatistic import optimalK, optimalC2
 
 scratch_dir = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch'
 dap = 'dap_clustering'
@@ -407,17 +407,13 @@ def simulate_models():
         'kmedoids': lambda k: KMedoids(k),
     }
     metric_names = ['gap']
-    ks = {
-        'kmeans': 16,
-        'kmedoids': 16,
-        'cmeans':  21
-    }
+    ks = {}
 
     for model in model_names:
         for metric in metric_names:
-            #df = pd.read_csv(f'{base_dir}/data/{model}/{metric}/daps.csv', names=['k', 'gap'])
-            #k = df.loc[df['gap'].idxmax(), 'k']
-            #ks[model] = k
+            df = pd.read_csv(f'{base_dir}/data/{model}/{metric}/daps.csv', names=['k', 'gap'])
+            k = df.loc[df['gap'].idxmax(), 'k']
+            ks[model] = k
             clf = models[model](ks[model])
             clf.fit(ed_coords)
             centroids = clf.cluster_centers_
@@ -425,8 +421,8 @@ def simulate_models():
             simulate(ed_coords, centroids, model)
 
     # Simulating C-Means
-    df = pd.read_csv(f'{data_dir}/cmeans/gap/daps.csv').drop(0, axis=0)
-    k = df.loc[df['gap'].idxmax(), 'clusterCount']
+    df = pd.read_csv(f'{data_dir}/cmeans/gap/daps.csv', names=['k', 'gap'])
+    k = df.loc[df['gap'].idxmax(), 'k']
     ks['cmeans'] = k
     centroids = plot_cclusters(ed_coords, k)
     simulate(ed_coords, centroids, 'cmeans')
@@ -437,25 +433,19 @@ def simulate_models():
 def opt_cmeans():
     ed_coords = generate_ed_coords() 
 
+    num_iters = 20
     max_clusters = 30
 
-    k, results, _ = optimalC(ed_coords.T, nrefs=5, maxClusters=max_clusters+1)
+    for i in range(num_iters):
+        k, results, _ = optimalC2(ed_coords.T, nrefs=100, maxClusters=max_clusters+1)
+        score = results['gap'][k-1]
 
-    plt.plot(range(1, max_clusters+1, 1), results['gap'])
-    plt.title(f'DAP optimal quantity - C-Means and Gap Statistics (k={k})', fontsize=14)
-    plt.grid(True)
-    plt.xlabel('k', fontsize=12)
-    plt.ylabel('Gaps', fontsize=12)
-    plt.xticks(fontsize=10)
-    plt.yticks(fontsize=10)
-    plt.savefig(f'{img_dir}/cmeans/gap/{k}_daps.png')
-    plt.clf()
+        write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
 
-    results.to_csv(f'{data_dir}/cmeans/gap/daps.csv', index=False)
-    print(f'DAP optimal quantity - C-Means and Gap Statistics (k={k})')
-    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        print(f'k defined in the iteration {i+1} with gap statistics = {k}')
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
 
 if __name__ == '__main__':
-    opt_kmodels()
-    opt_cmeans()
-    #simulate_models()
+    # opt_kmodels()
+    # opt_cmeans()
+    simulate_models()
