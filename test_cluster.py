@@ -446,14 +446,14 @@ def simulate_models():
             clf.fit(ed_coords)
             centroids = clf.cluster_centers_
             plot_kclusters(ed_coords, clf, model)
-            #simulate(ed_coords, centroids, model)
+            simulate(ed_coords, centroids, model)
 
     # Simulating C-Means
     df = pd.read_csv(f'{data_dir}/cmeans/gap/daps.csv').drop(0, axis=0)
     k = df.loc[df['gap'].idxmax(), 'clusterCount']
     ks['cmeans'] = k
     centroids = plot_cclusters(ed_coords, k)
-    #simulate(ed_coords, centroids, 'cmeans')
+    simulate(ed_coords, centroids, 'cmeans')
     
     plot_copex(ks)
     plot_metrics(ks)
@@ -480,6 +480,6 @@ def opt_cmeans():
     print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
 if __name__ == '__main__':
-    # opt_kmodels()
-    # opt_cmeans()
+    opt_kmodels()
+    opt_cmeans()
     simulate_models()
