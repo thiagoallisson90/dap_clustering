@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from yellowbrick.cluster import KElbowVisualizer
-from gapstatistic import optimalK, optimalC2
+from gapstatistic import optimalK, optimalC1
 
 scratch_dir = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch'
 dap = 'dap_clustering'
@@ -451,16 +451,15 @@ def opt_cmeans():
     print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     for i in range(num_iters):
-        k, results, _ = optimalC2(ed_coords.T, nrefs=120, min_clusters=10, maxClusters=max_clusters+1)
-        score = results['gap'][k-1]
+        k, results, gap = optimalC1(ed_coords.T, nrefs=20, min_clusters=10, maxClusters=max_clusters+1)
 
         #write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
-        scores.append({'k': k, 'score': score})
+        scores.append({'k': k, 'score': gap})
 
-        print(f'k defined in the iteration {i+1} with gap statistics = {k}')
+        print(f'k defined in the iteration {i+1} with gap statistics = {gap} is {k}')
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
     
-    pd.DataFrame(scores).to_csv(f'data/cmeans/gap/daps.csv', index=False, header=False)
+    pd.DataFrame(scores).to_csv(f'{data_dir}/cmeans/gap/daps.csv', index=False, header=False)
 
 if __name__ == '__main__':
     #opt_kmodels()

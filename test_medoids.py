@@ -25,4 +25,13 @@ def optmizeK():
   plt.show()
 
 if __name__ == '__main__':
-  optmizeK()
+  from skcmeans.algorithms import GustafsonKesselMixin, Probabilistic
+
+  class ProbabilisticGustafsonKessel(GustafsonKesselMixin, Probabilistic):
+    pass
+
+  pgk = ProbabilisticGustafsonKessel(10)
+  pgk.fit(gen_coords())
+
+  print(pgk.centers)
+

@@ -137,18 +137,14 @@ def optimalC(data, nrefs=3, maxClusters=15):
     return k, pd.DataFrame(resultsdf), pd.DataFrame(gp)
 
 
-def optimalC1(data, nrefs=3, maxClusters=15):
-    """
-    Calculates KMeans optimal K using Gap Statistic from Tibshirani, Walther, Hastie
-    Params:
-        data: ndarry of shape (n_samples, n_features)
-        nrefs: number of sample reference datasets to create
-        maxClusters: Maximum number of clusters to test for
-    Returns: (gaps, optimalK)
-    """
-    gaps = np.zeros((len(range(1, maxClusters)),))
+def optimalC1(data, nrefs=3, min_clusters=10, maxClusters=30):
+    gaps = np.zeros((len(range(min_clusters, maxClusters)),))
     resultsdf = []
-    for gap_index, k in enumerate(range(1, maxClusters)):
+
+    best_gap = None
+    best_k = -1
+    gap_index = 0
+    for k in range(min_clusters, maxClusters):
 
         # Holder for reference dispersion results
         refDisps = np.zeros(nrefs)
@@ -160,13 +156,11 @@ def optimalC1(data, nrefs=3, maxClusters=15):
             randomReference = np.random.random_sample(size=data.shape)
             
             # Fit to it
-            cntr, u, u0, d, jm, p, fpc = cmeans(data=randomReference, c=k, m=2, error=0.005, maxiter=1000)
-            
+            _, _, _, _, jm, _, _ = cmeans(data=randomReference, c=k, m=2, error=0.005, maxiter=1000)
             refDisps[i] = jm.mean()
 
         # Fit cluster to original data and create dispersion
-        cntr, u, u0, d, jm, p, fpc = cmeans(data=data, c=k, m=2, error=0.005, maxiter=1000)
-        
+        _, _, _, _, jm, _, _ = cmeans(data=data, c=k, m=2, error=0.005, maxiter=1000)
         origDisp = jm.mean()
 
         # Calculate gap statistic
@@ -174,108 +168,14 @@ def optimalC1(data, nrefs=3, maxClusters=15):
 
         # Assign this loop's gap statistic to gaps
         gaps[gap_index] = gap
+        gap_index += 1
+
+        if(best_gap == None or best_gap < gap):
+            best_gap = gap
+            best_k =  k
         
         resultsdf.append({'clusterCount':k, 'gap':gap})
 
     # Plus 1 because index of 0 means 1 cluster is optimal, index 2 = 3 clusters are optimal
-    return (gaps.argmax() + 1), pd.DataFrame(resultsdf)
+    return best_k, pd.DataFrame(resultsdf), best_gap
 
-
-def range_limit(d, max=2000):
-    df = pd.DataFrame(d)
-    for column in df.columns[0:]:
-        for item in df[column]:
-            if item >= max:
-                df.replace(item, 10000, True)
-    return np.array(df)
-
-
-def points_limit(data, k, maxPoints=100):
-    desorganized = True
-    while desorganized:
-        cntr, u, u0, d, jm, p, fpc = cmeans(data=data, c=k, m=2, error=0.005, maxiter=1000, init=None)
-        df = pd.DataFrame(u)
-        a = 0
-        for _, row in df.iterrows():
-            aux = []
-            for item in row:
-                if item >= 0.6:
-                    aux.append(item)
-            if len(aux) >= maxPoints:
-                k += 1
-                break
-            else:
-                a += 1
-        if a == k:
-            desorganized = False
-    return k
-
-def calculate_dispersions(c, randomReference):
-        cntr, u, u0, d, jm, p, fpc = cmeans(data=randomReference, c=c, m=2, error=0.005, maxiter=1000)
-        BWkb = np.log(np.mean(jm))
-        return BWkb
-
-def optimalC2(data, nrefs=3, min_clusters=1, maxClusters=15):
-    """
-    Calculates Fuzzy C-Means optimal C using Gap Statistic from Sentelle, Hong, Georgiopoulos, Anagnostopoulos
-    Params:
-        data: ndarray of shape (n_samples, n_features)
-        nrefs: number of sample reference datasets to create
-        maxClusters: Maximum number of clusters to test for
-    Returns: (k, resultsdf, gp)
-    """
-    
-    sdk = np.zeros(len(range(min_clusters, maxClusters)))
-    sError = np.zeros(len(range(min_clusters, maxClusters)))
-    BWkbs = np.zeros(len(range(min_clusters, nrefs)))
-    Wks = np.zeros(len(range(min_clusters, maxClusters)))
-    Wkbs = np.zeros(len(range(min_clusters, maxClusters)))
-    gaps_sks = np.zeros((len(range(min_clusters, maxClusters))))
-    gp = []
-
-    gaps = np.zeros((len(range(min_clusters, maxClusters)),))
-    resultsdf = []
-
-    for gap_index, c in enumerate(range(min_clusters, maxClusters)):
-        # Use joblib to calculate reference dispersions in parallel
-        BWkbs = joblib.Parallel(n_jobs=-1)(
-            joblib.delayed(calculate_dispersions)(c, np.random.random_sample(size=data.shape)) for i in range(nrefs)
-        )
-
-        cntr, u, u0, d, jm, p, fpc = cmeans(data=data, c=c, m=2, error=0.005, maxiter=1000)
-
-        Wks[gap_index] = np.log(np.mean(jm))
-
-        gap = sum(BWkbs) / nrefs - Wks[gap_index]
-
-        gaps[gap_index] = gap
-
-        resultsdf.append({'clusterCount': c, 'gap': gap})
-
-        Wkbs[gap_index] = sum(BWkbs) / nrefs
-        sdk[gap_index] = np.sqrt((sum((BWkbs - Wkbs[gap_index])**2)) / nrefs)
-
-        sError[gap_index] = sdk[gap_index] * np.sqrt(1 + 1 / nrefs)
-
-    for k, _ in enumerate(range(min_clusters, maxClusters)):
-        if not k == len(gaps) - 1:
-            if gaps[k] >= gaps[k + 1] - sError[k + 1]:
-                gaps_sks[k] = gaps[k] - gaps[k + 1] - sError[k + 1]
-        else:
-            gaps_sks[k] = -20
-
-        gp.append({'clusterCount': k+1, 'Gap_sk': gaps_sks[k]})
-
-    iter_points = [x[0]+1 for x in sorted([y for y in enumerate(gaps)], key=lambda x: x[1], reverse=True)[:3]]
-    iter_points_sk = [x[0]+1 for x in sorted([y for y in enumerate(gaps_sks)], key=lambda x: x[1], reverse=True)[:3]]
-    a = list(filter(lambda g: g in iter_points, iter_points_sk))
-    if a:
-        if not min(a) == 1:
-            k = min(a)
-        else:
-            a.remove(1)
-            k = min(a)
-    else:
-        k = min(iter_points_sk)
-
-    return k, pd.DataFrame(resultsdf), pd.DataFrame(gp)
