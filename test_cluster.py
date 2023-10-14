@@ -123,7 +123,8 @@ def capex_opex_calc(n_gws):
     Clease, Celet, Ctrans, t = 1, 1, 0.1, 1
 
     capex = n_gws * (CBs + Cins + Cset + Txinst)
-    opex = (Cman*capex + n_gws * (Clease + Celet + Ctrans)) * t
+    #opex = (Cman*capex + n_gws * (Clease + Celet + Ctrans)) * t
+    opex = (Cman*capex + n_gws) * t
 
     return capex, opex
 
@@ -415,13 +416,13 @@ def simulate_models():
         'kmeans': lambda k: KMeans(k, n_init='auto'),
         'kmedoids': lambda k: KMedoids(k),
     }
-    metric_names = ['gap']
+    metric_names = ['elbow']
     ks = {}
 
     for model in model_names:
         for metric in metric_names:
-            df = pd.read_csv(f'{base_dir}/data/{model}/{metric}/daps.csv', names=['k', 'gap'])
-            k = df.loc[df['gap'].idxmax(), 'k']
+            df = pd.read_csv(f'{base_dir}/data/{model}/{metric}/daps.csv', names=['k', 'score'])
+            k = df.loc[df['score'].idxmin(), 'k']
             ks[model] = k
             clf = models[model](ks[model])
             clf.fit(ed_coords)
@@ -462,6 +463,6 @@ def opt_cmeans():
     pd.DataFrame(scores).to_csv(f'{data_dir}/cmeans/gap/daps.csv', index=False, header=False)
 
 if __name__ == '__main__':
-    #opt_kmodels()
-    opt_cmeans()
-    # simulate_models()
+    # opt_kmodels()
+    # opt_cmeans()
+    simulate_models()
