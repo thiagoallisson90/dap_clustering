@@ -167,6 +167,35 @@ def plot_copex(ks):
     plt.savefig(f'{img_dir}/opex_kmodels.png')
     plt.clf()
 
+def plot_dists(ks):
+    kmeans_dists = pd.read_csv(f'{data_dir}/kmeans/{ks["kmeans"]}gw_distances.csv')
+    kmedoids_dists = pd.read_csv(f'{data_dir}/kmedoids/{ks["kmedoids"]}gw_distances.csv')
+    cmeans_dists = pd.read_csv(f'{data_dir}/cmeans/{ks["cmeans"]}gw_distances.csv')
+
+    models = ['K-Means', 'K-Medoids', 'Fuzzy C-Means']
+    mean_dist = [kmeans_dists['mean_dist'].mean(), kmedoids_dists['mean_dist'].mean(), 
+                 cmeans_dists['mean_dist'].mean()]
+    max_dist = [kmeans_dists['max_dist'].mean(), kmedoids_dists['max_dist'].mean(), 
+                cmeans_dists['max_dist'].mean()]
+
+    width = 0.35
+
+    x = np.arange(len(models))
+
+    plt.figure(figsize=(12, 8))
+    plt.bar(x, mean_dist, width, label='Mean Distance', color='0.3', hatch='//')
+    plt.bar(x + width, max_dist, width, label='Maximium Distance', color='0.6', hatch='x')
+
+    plt.xlabel('Clustering Algorithms', fontsize=14)
+    plt.ylabel('Distances (m)', fontsize=14)
+    plt.title('Intra-cluster Distances', fontsize=16)
+    plt.xticks(x + width / 2, models, fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend()
+
+    plt.savefig(f'{img_dir}/dists_kmeans_{ks["kmeans"]}_kmedoids_{ks["kmedoids"]}_cmeans_{ks["cmeans"]}.png')
+    plt.clf()
+
 def plot_kclusters(X, model, name='kmeans'):
     from matplotlib.offsetbox import OffsetImage, AnnotationBbox
     from sklearn.metrics import pairwise_distances
@@ -438,6 +467,7 @@ def simulate_models():
     simulate(ed_coords, centroids, 'cmeans')
     
     plot_copex(ks)
+    plot_dists(ks)
     plot_metrics(ks)
 
 def opt_cmeans():
@@ -465,4 +495,4 @@ def opt_cmeans():
 if __name__ == '__main__':
     # opt_kmodels()
     # opt_cmeans()
-    simulate_models()
+    # simulate_models()
