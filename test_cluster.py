@@ -282,7 +282,7 @@ def plot_cclusters(X, k):
     from sklearn.metrics import pairwise_distances
     from skfuzzy.cluster import cmeans
 
-    cntr, u, u0, d, jm, p, fpc = cmeans(X.T, c=k, m=2, error=0.005, maxiter=1000)
+    cntr, u, _, _, _, _, _ = cmeans(X.T, c=k, m=2, error=0.005, maxiter=1000)
     n_clusters = len(cntr)
 
     labels = np.argmax(u, axis=0)
@@ -496,3 +496,4 @@ if __name__ == '__main__':
     # opt_kmodels()
     # opt_cmeans()
     # simulate_models()
+    pass
