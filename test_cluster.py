@@ -493,7 +493,6 @@ def opt_cmeans():
     pd.DataFrame(scores).to_csv(f'{data_dir}/cmeans/gap/daps.csv', index=False, header=False)
 
 if __name__ == '__main__':
-    # opt_kmodels()
-    # opt_cmeans()
-    # simulate_models()
-    pass
+    opt_kmodels()
+    opt_cmeans()
+    simulate_models()
