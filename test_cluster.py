@@ -4,7 +4,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from yellowbrick.cluster import KElbowVisualizer
 from gapstatistic import optimalK, optimalC1
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from sklearn.metrics import pairwise_distances
 
+####################
+# Global Variables #
+####################
 scratch_dir = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch'
 dap = 'dap_clustering'
 base_dir = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch/dap_clustering'
@@ -14,43 +19,11 @@ ed_pos_file = 'ed_pos_file.csv'
 ed_out_file = 'ed_out_file.csv'
 gw_pos_file = 'gw_pos_file.csv'
 ns3_cmd = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/./ns3'
+####################
 
-def generate_ed_coords(n_points=2000, axis_range = 10000):
-  np.random.seed(42)
-  x = np.random.uniform(0, axis_range, n_points)
-  y = np.random.uniform(0, axis_range, n_points)
-
-  np.random.seed(None)
-  
-  return np.column_stack((x, y))
-
-def write_coords(data, filename):
-    with open(f'{base_dir}/{filename}', mode='w') as file:
-        for d in data:
-            file.write(f'{d[0]},{d[1]}\n')
-
-def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, 
-             gw_pos_file=gw_pos_file, radius=10000, load=1):
-    script='scratch/dap_clustering.cc'
-    n_gw = len(centroids)
-    n_simulatons = 30
-    
-    write_coords(coords, ed_pos_file)
-    write_coords(centroids, gw_pos_file)
-    
-    #os.system(f'rm {data_dir}/{model}/tracker_{n_gw}_unconfirmed_buildings{n_gw}gw.csv')
-    params01 = f'--edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw}'
-    params02 = f'--cModel={model} --radius={radius} --nDevices={len(coords)} --lambda={load}'
-
-    for i in range(1, n_simulatons+1):
-        run_cmd = \
-            f'{ns3_cmd} run "{script} {params01} {params02} --nRun={i}"'
-        os.system(run_cmd)
-
-def write_scores(data, filename):
-    with open(f'{base_dir}/{filename}', mode='a') as file:
-        file.write(f'{data["k"]},{data["score"]}\n')
-
+####################
+# Crisp Clustering #
+####################
 def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
     from sklearn.cluster import KMeans
     from sklearn_extra.cluster import KMedoids
@@ -122,90 +95,7 @@ def opt_kmodels():
         for metric in metric_names:
             opt_kmodel(ed_coords, model, metric)
 
-def capex_opex_calc(n_gws):
-    CBs, Cins, Cset, Txinst = 1, 2, 0.1, 4
-
-    Cman = 0.125
-    Clease, Celet, Ctrans, t = 1, 1, 0.1, 1
-
-    capex = n_gws * (CBs + Cins + Cset + Txinst)
-    #opex = (Cman*capex + n_gws * (Clease + Celet + Ctrans)) * t
-    opex = (Cman*capex + n_gws) * t
-
-    return capex, opex
-
-def plot_copex(ks):
-    n_gws_kmeans, n_gws_kmedoids, n_gws_cmeans = ks['kmeans'], ks['kmedoids'], ks['cmeans']
-    capex1, opex1 = capex_opex_calc(n_gws_kmeans)
-    capex2, opex2 = capex_opex_calc(n_gws_kmedoids)
-    capex3, opex3 = capex_opex_calc(n_gws_cmeans)
-
-    capex_values = [capex1, capex2, capex3]
-    opex_values = [opex1, opex2, opex3]
-
-    scenario_labels = ['K-Means', 'K-Medoids', 'C-Means']
-
-    plt.figure(figsize=(12, 8))
-    plt.bar(scenario_labels, capex_values, color=['red', 'green', 'blue'])
-    plt.xlabel('Clustering Models', fontsize=14)
-    plt.ylabel('CapEx (K€)', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.title('CapEx - K-Means, K-Medoids and C-Means', fontsize=16)
-
-    for i, value in enumerate(capex_values):
-        plt.text(i, value, str(value), ha='center', va='bottom', fontsize=12)
-
-    plt.savefig(f'{img_dir}/capex_kmodels.png')
-    plt.clf()
-
-    plt.figure(figsize=(12, 8))
-    plt.bar(scenario_labels, opex_values, color=['red', 'green', 'blue'])
-    plt.xlabel('Clustering Models', fontsize=14)
-    plt.ylabel('OpEx (K€)', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.title('OpEx - K-Means, K-Medoids and C-Means', fontsize=16)
-    
-    for i, value in enumerate(opex_values):
-        plt.text(i, value, str(value), ha='center', va='bottom', fontsize=12)
-    
-    plt.savefig(f'{img_dir}/opex_kmodels.png')
-    plt.clf()
-
-def plot_dists(ks):
-    kmeans_dists = pd.read_csv(f'{data_dir}/kmeans/{ks["kmeans"]}gw_distances.csv')
-    kmedoids_dists = pd.read_csv(f'{data_dir}/kmedoids/{ks["kmedoids"]}gw_distances.csv')
-    cmeans_dists = pd.read_csv(f'{data_dir}/cmeans/{ks["cmeans"]}gw_distances.csv')
-
-    models = ['K-Means', 'K-Medoids', 'Fuzzy C-Means']
-    mean_dist = [kmeans_dists['mean_dist'].mean(), kmedoids_dists['mean_dist'].mean(), 
-                 cmeans_dists['mean_dist'].mean()]
-    max_dist = [kmeans_dists['max_dist'].mean(), kmedoids_dists['max_dist'].mean(), 
-                cmeans_dists['max_dist'].mean()]
-
-    width = 0.35
-
-    x = np.arange(len(models))
-
-    plt.figure(figsize=(12, 8))
-    plt.bar(x, mean_dist, width, label='Mean Distance', color='0.3', hatch='//')
-    plt.bar(x + width, max_dist, width, label='Maximium Distance', color='0.6', hatch='x')
-
-    plt.xlabel('Clustering Algorithms', fontsize=14)
-    plt.ylabel('Distances (m)', fontsize=14)
-    plt.title('Intra-cluster Distances', fontsize=16)
-    plt.xticks(x + width / 2, models, fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.legend()
-
-    plt.savefig(f'{img_dir}/dists_kmeans_{ks["kmeans"]}_kmedoids_{ks["kmedoids"]}_cmeans_{ks["cmeans"]}.png')
-    plt.clf()
-
 def plot_kclusters(X, model, name='kmeans'):
-    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-    from sklearn.metrics import pairwise_distances
-
     kmeans_labels = model.labels_
     centroids = model.cluster_centers_
     title = {
@@ -282,25 +172,49 @@ def plot_kclusters(X, model, name='kmeans'):
 
     write_coords(centroids, f'data/{name}/{len(centroids)}gw_centroids.csv')
     pd.DataFrame(data).to_csv(f'{data_dir}/{name}/{len(centroids)}gw_distances.csv', index=False)
+####################
 
-def plot_cclusters(X, k):
-    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-    from sklearn.metrics import pairwise_distances
-    from skfuzzy.cluster import cmeans
-
-    cntr, u, _, _, _, _, _ = cmeans(X.T, c=k, m=2, error=0.005, maxiter=1000)
-    n_clusters = len(cntr)
-
-    labels = np.argmax(u, axis=0)
-    
-    cluster_points = {}
-    for i in range(n_clusters):
-        cluster_points[i] = []
-
+####################
+# Fuzzy Clustering #
+####################
+def fuzzy_template(X, n_clusters, labels):
+    cluster_points = [[] for _ in range(n_clusters)]
     for i, label in enumerate(labels):
         cluster_points[label].append(X[i])
+    
+    return cluster_points
 
-    colors = plt.cm.rainbow(np.linspace(0, 1, n_clusters))
+def cm_cluster(X, n_clusters=2, m=2, error=0.005, max_iter=1000):
+    from skfuzzy.cluster import cmeans
+
+    cntr, u, _, _, _, _, _ = cmeans(X.T, c=n_clusters, m=m, error=error, maxiter=max_iter)
+    labels = np.argmax(u, axis=0)    
+    cluster_points = fuzzy_template(X, n_clusters, labels)
+
+    return cntr, labels, cluster_points
+
+def gk_cluster(X, n_clusters=2, m=2, error=0.005, max_iter=1000):
+    from fcluster import FCluster
+
+    clf = FCluster(n_clusters=n_clusters, method='Gustafson–Kessel', fuzzines=m, error=error, max_iter=max_iter)
+    u, cntr = clf.fit(X)
+    labels = np.argmax(u, axis=-1)
+    cluster_points = fuzzy_template(X, n_clusters, labels)
+    
+    return cntr, labels, cluster_points
+
+def plot_cclusters(X, k, model='cmeans'):
+    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+    from sklearn.metrics import pairwise_distances
+
+    run_model = {
+        'cmeans': cm_cluster,
+        'gk': gk_cluster,
+    }
+
+    cntr, labels, cluster_points = run_model[model](X, k)
+
+    colors = plt.cm.rainbow(np.linspace(0, 1, k))
 
     plt.figure(figsize=(12, 8))
     plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='rainbow', alpha=0.7, s=100)
@@ -319,7 +233,7 @@ def plot_cclusters(X, k):
         plt.gca().add_artist(ab)
         plt.text(centroid[0] + 1, centroid[1], f'     {i+1}', fontsize=16, fontweight="bold")
 
-    plt.savefig(f'{img_dir}/cmeans/{n_clusters}gw.png')
+    plt.savefig(f'{img_dir}/{model}/{k}gw.png')
     plt.clf()
 
     cluster_counts = np.bincount(labels)
@@ -330,18 +244,18 @@ def plot_cclusters(X, k):
 
     plt.figure(figsize=(10, 6))
     
-    plt.barh(range(n_clusters), sorted_cluster_counts, tick_label=sorted_cluster_labels, color=colors)
+    plt.barh(range(k), sorted_cluster_counts, tick_label=sorted_cluster_labels, color=colors)
     plt.xlabel('SMs per Cluster', fontsize=14)
     plt.ylabel('Clusters', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
 
     plt.title('Number of SMs in each Cluster', fontsize=16)
-    plt.savefig(f'{img_dir}/cmeans/{n_clusters}gw_chart.png', bbox_inches='tight')
+    plt.savefig(f'{img_dir}/{model}/{k}gw_chart.png', bbox_inches='tight')
     plt.clf()
 
     intra_cluster_distances = {}
-    for label, points in cluster_points.items():
+    for label, points in enumerate(cluster_points):
         distances = pairwise_distances(points, metric='euclidean')
         intra_cluster_distances[label] = distances
 
@@ -354,15 +268,77 @@ def plot_cclusters(X, k):
         max_intra_cluster_distances[label] = max_distance
     
     data = {
-        'cluster': list(range(1, n_clusters+1)),
+        'cluster': list(range(1, k+1)),
         'mean_dist': [round(d, 2) for d in average_intra_cluster_distances.values()],
         'max_dist': [round(d, 2) for d in max_intra_cluster_distances.values()]
     }
 
-    write_coords(cntr, f'data/cmeans/{n_clusters}gw_centroids.csv')
-    pd.DataFrame(data).to_csv(f'{data_dir}/cmeans/{n_clusters}gw_distances.csv', index=False)
+    write_coords(cntr, f'data/{model}/{k}gw_centroids.csv')
+    pd.DataFrame(data).to_csv(f'{data_dir}/{model}/{k}gw_distances.csv', index=False)
 
     return cntr
+
+def opt_cmeans():
+    ed_coords = generate_ed_coords() 
+
+    num_iters = 20
+    max_clusters = 30
+
+    scores = []
+
+    print('Running (cmeans,gap)')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+    for i in range(num_iters):
+        k, results, gap = optimalC1(ed_coords.T, nrefs=20, min_clusters=10, maxClusters=max_clusters+1)
+
+        #write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
+        scores.append({'k': k, 'score': gap})
+
+        print(f'k defined in the iteration {i+1} with gap statistics = {gap} is {k}')
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
+    
+    pd.DataFrame(scores).to_csv(f'{data_dir}/cmeans/gap/daps.csv', index=False, header=False)
+###################
+
+####################
+# General Functions #
+####################
+def generate_ed_coords(n_points=2000, axis_range = 10000):
+  np.random.seed(42)
+  x = np.random.uniform(0, axis_range, n_points)
+  y = np.random.uniform(0, axis_range, n_points)
+
+  np.random.seed(None)
+  
+  return np.column_stack((x, y))
+
+def write_coords(data, filename):
+    with open(f'{base_dir}/{filename}', mode='w') as file:
+        for d in data:
+            file.write(f'{d[0]},{d[1]}\n')
+
+def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, 
+             gw_pos_file=gw_pos_file, radius=10000, load=1):
+    script='scratch/dap_clustering.cc'
+    n_gw = len(centroids)
+    n_simulatons = 30
+    
+    write_coords(coords, ed_pos_file)
+    write_coords(centroids, gw_pos_file)
+    
+    os.system(f'rm {data_dir}/{model}/tracker_{n_gw}_unconfirmed_buildings{n_gw}gw.csv')
+    params01 = f'--edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw}'
+    params02 = f'--cModel={model} --radius={radius} --nDevices={len(coords)} --lambda={load}'
+
+    for i in range(1, n_simulatons+1):
+        run_cmd = \
+            f'{ns3_cmd} run "{script} {params01} {params02} --nRun={i}"'
+        os.system(run_cmd)
+
+def write_scores(data, filename):
+    with open(f'{base_dir}/{filename}', mode='a') as file:
+        file.write(f'{data["k"]},{data["score"]}\n')
 
 def plot_metrics(ks):
     import seaborn as sns
@@ -476,29 +452,95 @@ def simulate_models():
     plot_dists(ks)
     plot_metrics(ks)
 
-def opt_cmeans():
-    ed_coords = generate_ed_coords() 
+def capex_opex_calc(n_gws):
+    CBs, Cins, Cset, Txinst = 1, 2, 0.1, 4
 
-    num_iters = 20
-    max_clusters = 30
+    Cman = 0.125
+    Clease, Celet, Ctrans, t = 1, 1, 0.1, 1
 
-    scores = []
+    capex = n_gws * (CBs + Cins + Cset + Txinst)
+    #opex = (Cman*capex + n_gws * (Clease + Celet + Ctrans)) * t
+    opex = (Cman*capex + n_gws) * t
 
-    print('Running (cmeans,gap)')
-    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    return capex, opex
 
-    for i in range(num_iters):
-        k, results, gap = optimalC1(ed_coords.T, nrefs=20, min_clusters=10, maxClusters=max_clusters+1)
+def plot_copex(ks):
+    n_gws_kmeans, n_gws_kmedoids, n_gws_cmeans = ks['kmeans'], ks['kmedoids'], ks['cmeans']
+    capex1, opex1 = capex_opex_calc(n_gws_kmeans)
+    capex2, opex2 = capex_opex_calc(n_gws_kmedoids)
+    capex3, opex3 = capex_opex_calc(n_gws_cmeans)
 
-        #write_scores({'k': k, 'score': score}, f'data/cmeans/gap/daps.csv')
-        scores.append({'k': k, 'score': gap})
+    capex_values = [capex1, capex2, capex3]
+    opex_values = [opex1, opex2, opex3]
 
-        print(f'k defined in the iteration {i+1} with gap statistics = {gap} is {k}')
-        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')    
+    scenario_labels = ['K-Means', 'K-Medoids', 'C-Means']
+
+    plt.figure(figsize=(12, 8))
+    plt.bar(scenario_labels, capex_values, color=['red', 'green', 'blue'])
+    plt.xlabel('Clustering Models', fontsize=14)
+    plt.ylabel('CapEx (K€)', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title('CapEx - K-Means, K-Medoids and C-Means', fontsize=16)
+
+    for i, value in enumerate(capex_values):
+        plt.text(i, value, str(value), ha='center', va='bottom', fontsize=12)
+
+    plt.savefig(f'{img_dir}/capex_kmodels.png')
+    plt.clf()
+
+    plt.figure(figsize=(12, 8))
+    plt.bar(scenario_labels, opex_values, color=['red', 'green', 'blue'])
+    plt.xlabel('Clustering Models', fontsize=14)
+    plt.ylabel('OpEx (K€)', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title('OpEx - K-Means, K-Medoids and C-Means', fontsize=16)
     
-    pd.DataFrame(scores).to_csv(f'{data_dir}/cmeans/gap/daps.csv', index=False, header=False)
+    for i, value in enumerate(opex_values):
+        plt.text(i, value, str(value), ha='center', va='bottom', fontsize=12)
+    
+    plt.savefig(f'{img_dir}/opex_kmodels.png')
+    plt.clf()
 
+def plot_dists(ks):
+    kmeans_dists = pd.read_csv(f'{data_dir}/kmeans/{ks["kmeans"]}gw_distances.csv')
+    kmedoids_dists = pd.read_csv(f'{data_dir}/kmedoids/{ks["kmedoids"]}gw_distances.csv')
+    cmeans_dists = pd.read_csv(f'{data_dir}/cmeans/{ks["cmeans"]}gw_distances.csv')
+
+    models = ['K-Means', 'K-Medoids', 'Fuzzy C-Means']
+    mean_dist = [kmeans_dists['mean_dist'].mean(), kmedoids_dists['mean_dist'].mean(), 
+                 cmeans_dists['mean_dist'].mean()]
+    max_dist = [kmeans_dists['max_dist'].mean(), kmedoids_dists['max_dist'].mean(), 
+                cmeans_dists['max_dist'].mean()]
+
+    width = 0.35
+
+    x = np.arange(len(models))
+
+    plt.figure(figsize=(12, 8))
+    plt.bar(x, mean_dist, width, label='Mean Distance', color='0.3', hatch='//')
+    plt.bar(x + width, max_dist, width, label='Maximium Distance', color='0.6', hatch='x')
+
+    plt.xlabel('Clustering Algorithms', fontsize=14)
+    plt.ylabel('Distances (m)', fontsize=14)
+    plt.title('Intra-cluster Distances', fontsize=16)
+    plt.xticks(x + width / 2, models, fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend()
+
+    plt.savefig(f'{img_dir}/dists_kmeans_{ks["kmeans"]}_kmedoids_{ks["kmedoids"]}_cmeans_{ks["cmeans"]}.png')
+    plt.clf()
+####################
+
+########
+# Main #
+########
 if __name__ == '__main__':
-    opt_kmodels()
-    opt_cmeans()
-    simulate_models()
+    #opt_kmodels()
+    #opt_cmeans()
+    #simulate_models()
+
+    ed_coords = generate_ed_coords()
+    plot_cclusters(ed_coords, k=16)
+    plot_cclusters(ed_coords, k=16, model='gk')
