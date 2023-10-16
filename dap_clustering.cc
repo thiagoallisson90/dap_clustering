@@ -49,7 +49,7 @@ NS_LOG_COMPONENT_DEFINE ("ComplexLorawanNetworkExample");
 //////////////////////
 // Network settings
 int nDevices = 2000;
-int nGateways = 2;
+int nGateways = 1;
 double radius = 10000; //Note that due to model updates, 7500 m is no longer the maximum distance 
 double simulationTime = nDevices;
 double lambda = 1; // Traffic Load
@@ -97,7 +97,7 @@ WriteInLog (std::string output)
   if (ofs.is_open ())
     {
       //sent,received,pdr,rssi,snr,delay
-      ofs << output << std::endl;
+      ofs << output << (clusteringModel == "tests" ? "," + std::to_string ((int)radius) : "") << std::endl;
       ofs.close ();
     }
 }
@@ -194,14 +194,17 @@ main (int argc, char *argv[])
   cmd.AddValue ("gwPos", "File with the gateway positions", gwPos);
   cmd.AddValue ("nGateways", "Number of gateways", nGateways);
   cmd.AddValue ("cModel", "Clustering Model", clusteringModel);
+  cmd.AddValue ("radius", "Size of the radius of the gateway cell", radius);
   cmd.Parse (argc, argv);
 
   if(nRun > 0)
     RngSeedManager::SetRun(nRun);    
 
+  simulationTime = nDevices;
+
   appPeriodSeconds = simulationTime / lambda;
   //simulationTime = simulationTime / lambda * nSimulation;
-  simulationTime = simulationTime / lambda * 2;
+  simulationTime = simulationTime / lambda * 1;
 
   std::cout << "Lambda=" << lambda << "," << "Simulation Time=" << simulationTime << "," << "App Period=" 
             << appPeriodSeconds << "," << "Number of Gateways=" << nGateways << std::endl;
@@ -409,8 +412,18 @@ main (int argc, char *argv[])
   /**********************************************
    *  Set up the end device's spreading factor  *
    **********************************************/
-
-  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
+  if (clusteringModel != "tests")
+    {
+      macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
+    }
+  else
+    {
+      Ptr<NetDevice> netDevice = endDevices.Get (0)->GetDevice (0);
+      Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
+      Ptr<ClassAEndDeviceLorawanMac> mac =
+          loraNetDevice->GetMac ()->GetObject<ClassAEndDeviceLorawanMac> ();
+      mac->SetDataRate (0);
+    }
 
   NS_LOG_DEBUG ("Completed configuration");
 
@@ -481,9 +494,12 @@ main (int argc, char *argv[])
   //////////
   // Logs //
   //////////
-  /*std::string phyName = baseDir + "data/" + clusteringModel + "/nRun_" + std::to_string (nRun) + "_phy_" 
-    + std::to_string (nGateways) + "gw.csv";
-  helper.EnablePeriodicPhyPerformancePrinting (gateways, phyName, appStopTime);*/
+  if (clusteringModel == "tests")
+    {
+      std::string phyName = baseDir + "data/" + clusteringModel + "/nRun_" + std::to_string (nRun) + "_phy_" 
+        + std::to_string (nGateways) + "gw.csv";
+      helper.EnablePeriodicPhyPerformancePrinting (gateways, phyName, Time (simulationTime));
+    }
 
   ////////////////
   // Simulation //
