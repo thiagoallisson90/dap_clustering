@@ -21,9 +21,135 @@ gw_pos_file = 'gw_pos_file.csv'
 ns3_cmd = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/./ns3'
 ####################
 
-####################
-# Crisp Clustering #
-####################
+##############
+# Clustering #
+##############
+def clustering(X, n_clusters, labels):
+    cluster_points = [[] for _ in range(n_clusters)]
+    for i, label in enumerate(labels):
+        cluster_points[label].append(X[i])
+    
+    return cluster_points
+
+def cm_cluster(X, n_clusters=2, m=2, error=0.005, max_iter=1000):
+    from skfuzzy.cluster import cmeans
+
+    cntr, u, _, _, _, _, _ = cmeans(X.T, c=n_clusters, m=m, error=error, maxiter=max_iter)
+    labels = np.argmax(u, axis=0)    
+    cluster_points = clustering(X, n_clusters, labels)
+
+    return cntr, labels, cluster_points
+
+def gk_cluster(X, n_clusters=2, m=2, error=0.005, max_iter=1000):
+    from fcluster import FCluster
+
+    clf = FCluster(n_clusters=n_clusters, method='Gustafson–Kessel', fuzzines=m, error=error, max_iter=max_iter)
+    u, cntr = clf.fit(X)
+    labels = np.argmax(u, axis=-1)
+    cluster_points = clustering(X, n_clusters, labels)
+    
+    return cntr, labels, cluster_points
+
+def kmeans_cluster(X, n_clusters=2):
+    from sklearn.cluster import KMeans
+
+    clf = KMeans(n_clusters, n_init='auto').fit(X)
+    cluster_points = clustering(X, n_clusters, clf.labels_)
+
+    return clf.cluster_centers_, clf.labels_, cluster_points
+
+def kmedoids_cluster(X, n_clusters=2):
+    from sklearn_extra.cluster import KMedoids
+
+    clf = KMedoids(n_clusters).fit(X)
+    cluster_points = clustering(X, n_clusters, clf.labels_)
+
+    return clf.cluster_centers_, clf.labels_, cluster_points
+
+run_model = {
+    'kmeans': kmeans_cluster,
+    'kmedoids':  kmedoids_cluster,
+    'cmeans': cm_cluster,
+    'gk': gk_cluster,
+}
+
+def plot_clusters(X, k, model='kmeans'):
+    title_model = {
+        'kmeans': 'K-Means',
+        'kmedoids': 'K-Medoids',
+        'cmeans':  'Fuzzy C-Means',
+        'gk': 'Gustafson-Kessel Clustering',
+    }
+
+    cntr, labels, cluster_points = run_model[model](X, k)
+
+    colors = plt.cm.rainbow(np.linspace(0, 1, k))
+
+    plt.figure(figsize=(12, 8))
+    plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='rainbow', alpha=0.7, s=100)
+
+    plt.xlabel('X', fontsize=14)
+    plt.ylabel('Y', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title(f'{title_model[model]}', fontsize=16)
+
+    image_path = f'{img_dir}/antenna.jpg'
+    image = plt.imread(image_path)
+    for i, centroid in enumerate(cntr):
+        imagebox = OffsetImage(image, zoom=0.1)
+        ab = AnnotationBbox(imagebox, centroid, frameon=False)
+        plt.gca().add_artist(ab)
+        plt.text(centroid[0] + 1, centroid[1], f'     {i+1}', fontsize=16, fontweight="bold")
+
+    plt.savefig(f'{img_dir}/{model}/{k}gw.png')
+    plt.clf()
+
+    cluster_counts = np.bincount(labels)
+
+    sorted_indices = np.argsort(cluster_counts)[::-1]
+    sorted_cluster_counts = cluster_counts[sorted_indices]
+    sorted_cluster_labels = [f'Cluster {i+1}' for i in sorted_indices]
+
+    plt.figure(figsize=(10, 6))
+    
+    plt.barh(range(k), sorted_cluster_counts, tick_label=sorted_cluster_labels, color=colors)
+    plt.xlabel('SMs per Cluster', fontsize=14)
+    plt.ylabel('Clusters', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+
+    plt.title('Number of SMs in each Cluster', fontsize=16)
+    plt.savefig(f'{img_dir}/{model}/{k}gw_chart.png', bbox_inches='tight')
+    plt.clf()
+
+    intra_cluster_distances = {}
+    for label, points in enumerate(cluster_points):
+        distances = pairwise_distances(points, metric='euclidean')
+        intra_cluster_distances[label] = distances
+
+    average_intra_cluster_distances = {}
+    max_intra_cluster_distances = {}
+    for label, distances in intra_cluster_distances.items():
+        average_distance = np.mean(distances)
+        max_distance = np.max(distances)
+        average_intra_cluster_distances[label] = average_distance
+        max_intra_cluster_distances[label] = max_distance
+    
+    data = {
+        'cluster': list(range(1, k+1)),
+        'mean_dist': [round(d, 2) for d in average_intra_cluster_distances.values()],
+        'max_dist': [round(d, 2) for d in max_intra_cluster_distances.values()]
+    }
+
+    write_coords(cntr, f'data/{model}/{k}gw_centroids.csv')
+    pd.DataFrame(data).to_csv(f'{data_dir}/{model}/{k}gw_distances.csv', index=False)
+
+    return cntr, labels, cluster_points
+
+###########################
+# Clustering Optimization #
+###########################
 def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
     from sklearn.cluster import KMeans
     from sklearn_extra.cluster import KMedoids
@@ -81,202 +207,16 @@ def opt_kmodel(data, model_name='kmeans', metric_name='gap'):
     
     pd.DataFrame(scores).to_csv(f'{opt_dir}/daps.csv', index=False, header=False)
 
-def opt_kmodels():
+def opt_models(X):
     models_name = ['kmeans', 'kmedoids']
-    metric_names = ['elbow', 'silhouette', 'calinski', 
-                    #'gap'
-                   ]    
-    #metric_names = ['gap']
+    #metric_names = ['elbow', 'silhouette', 'calinski', 'gap']
+    metric_names = ['elbow']
 
-    ed_coords = generate_ed_coords()
-    write_coords(ed_coords, ed_pos_file)
+    write_coords(X, ed_pos_file)
 
     for model in models_name:
         for metric in metric_names:
-            opt_kmodel(ed_coords, model, metric)
-
-def plot_kclusters(X, model, name='kmeans'):
-    kmeans_labels = model.labels_
-    centroids = model.cluster_centers_
-    title = {
-        'kmeans': 'KMeans Clusters',
-        'kmedoids': 'KMedoids Clusters'
-    }
-
-    n_clusters = len(centroids)
-    colors = plt.cm.rainbow(np.linspace(0, 1, n_clusters))
-
-    plt.figure(figsize=(12, 8))
-    plt.scatter(X[:, 0], X[:, 1], c=kmeans_labels, cmap='rainbow', alpha=0.7, s=100)
-
-    plt.xlabel('X', fontsize=14)
-    plt.ylabel('Y', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.title(title[name], fontsize=16)
-
-    image_path = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch/dap_clustering/imgs/antenna.jpg'
-    image = plt.imread(image_path)
-    for i, centroid in enumerate(centroids):
-        imagebox = OffsetImage(image, zoom=0.1)
-        ab = AnnotationBbox(imagebox, centroid, frameon=False)
-        plt.gca().add_artist(ab)
-        plt.text(centroid[0] + 1, centroid[1], f'     {i+1}', fontsize=16, fontweight="bold")
-
-    plt.savefig(f'{img_dir}/{name}/{len(centroids)}gw.png')
-    plt.clf()
-
-    cluster_counts = np.bincount(kmeans_labels)
-
-    sorted_indices = np.argsort(cluster_counts)[::-1]
-    sorted_cluster_counts = cluster_counts[sorted_indices]
-    sorted_cluster_labels = [f'Cluster {i+1}' for i in sorted_indices]
-
-    plt.figure(figsize=(10, 6))
-    
-    plt.barh(range(n_clusters), sorted_cluster_counts, tick_label=sorted_cluster_labels, color=colors)
-    plt.xlabel('SMs per Cluster', fontsize=14)
-    plt.ylabel('Clusters', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    plt.title('Number of SMs in each Cluster', fontsize=16)
-    plt.savefig(f'{img_dir}/{name}/{len(centroids)}gw_chart.png', bbox_inches='tight')
-    plt.clf()
-
-    cluster_points = {}
-    for i in range(n_clusters):
-        cluster_points[i] = []
-
-    for i, label in enumerate(kmeans_labels):
-        cluster_points[label].append(X[i])
-
-    intra_cluster_distances = {}
-    for label, points in cluster_points.items():
-        distances = pairwise_distances(points, metric='euclidean')
-        intra_cluster_distances[label] = distances
-
-    average_intra_cluster_distances = {}
-    max_intra_cluster_distances = {}
-    for label, distances in intra_cluster_distances.items():
-        average_distance = np.mean(distances)
-        max_distance = np.max(distances)
-        average_intra_cluster_distances[label] = average_distance
-        max_intra_cluster_distances[label] = max_distance
-    
-    data = {
-        'cluster': list(range(1, n_clusters+1)),
-        'mean_dist': [round(d, 2) for d in average_intra_cluster_distances.values()],
-        'max_dist': [round(d, 2) for d in max_intra_cluster_distances.values()]
-    }
-
-    write_coords(centroids, f'data/{name}/{len(centroids)}gw_centroids.csv')
-    pd.DataFrame(data).to_csv(f'{data_dir}/{name}/{len(centroids)}gw_distances.csv', index=False)
-####################
-
-####################
-# Fuzzy Clustering #
-####################
-def fuzzy_template(X, n_clusters, labels):
-    cluster_points = [[] for _ in range(n_clusters)]
-    for i, label in enumerate(labels):
-        cluster_points[label].append(X[i])
-    
-    return cluster_points
-
-def cm_cluster(X, n_clusters=2, m=2, error=0.005, max_iter=1000):
-    from skfuzzy.cluster import cmeans
-
-    cntr, u, _, _, _, _, _ = cmeans(X.T, c=n_clusters, m=m, error=error, maxiter=max_iter)
-    labels = np.argmax(u, axis=0)    
-    cluster_points = fuzzy_template(X, n_clusters, labels)
-
-    return cntr, labels, cluster_points
-
-def gk_cluster(X, n_clusters=2, m=2, error=0.005, max_iter=1000):
-    from fcluster import FCluster
-
-    clf = FCluster(n_clusters=n_clusters, method='Gustafson–Kessel', fuzzines=m, error=error, max_iter=max_iter)
-    u, cntr = clf.fit(X)
-    labels = np.argmax(u, axis=-1)
-    cluster_points = fuzzy_template(X, n_clusters, labels)
-    
-    return cntr, labels, cluster_points
-
-def plot_cclusters(X, k, model='cmeans'):
-    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-    from sklearn.metrics import pairwise_distances
-
-    run_model = {
-        'cmeans': cm_cluster,
-        'gk': gk_cluster,
-    }
-
-    cntr, labels, cluster_points = run_model[model](X, k)
-
-    colors = plt.cm.rainbow(np.linspace(0, 1, k))
-
-    plt.figure(figsize=(12, 8))
-    plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='rainbow', alpha=0.7, s=100)
-
-    plt.xlabel('X', fontsize=14)
-    plt.ylabel('Y', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.title('Fuzzy C-Means', fontsize=16)
-
-    image_path = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch/dap_clustering/imgs/antenna.jpg'
-    image = plt.imread(image_path)
-    for i, centroid in enumerate(cntr):
-        imagebox = OffsetImage(image, zoom=0.1)
-        ab = AnnotationBbox(imagebox, centroid, frameon=False)
-        plt.gca().add_artist(ab)
-        plt.text(centroid[0] + 1, centroid[1], f'     {i+1}', fontsize=16, fontweight="bold")
-
-    plt.savefig(f'{img_dir}/{model}/{k}gw.png')
-    plt.clf()
-
-    cluster_counts = np.bincount(labels)
-
-    sorted_indices = np.argsort(cluster_counts)[::-1]
-    sorted_cluster_counts = cluster_counts[sorted_indices]
-    sorted_cluster_labels = [f'Cluster {i+1}' for i in sorted_indices]
-
-    plt.figure(figsize=(10, 6))
-    
-    plt.barh(range(k), sorted_cluster_counts, tick_label=sorted_cluster_labels, color=colors)
-    plt.xlabel('SMs per Cluster', fontsize=14)
-    plt.ylabel('Clusters', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    plt.title('Number of SMs in each Cluster', fontsize=16)
-    plt.savefig(f'{img_dir}/{model}/{k}gw_chart.png', bbox_inches='tight')
-    plt.clf()
-
-    intra_cluster_distances = {}
-    for label, points in enumerate(cluster_points):
-        distances = pairwise_distances(points, metric='euclidean')
-        intra_cluster_distances[label] = distances
-
-    average_intra_cluster_distances = {}
-    max_intra_cluster_distances = {}
-    for label, distances in intra_cluster_distances.items():
-        average_distance = np.mean(distances)
-        max_distance = np.max(distances)
-        average_intra_cluster_distances[label] = average_distance
-        max_intra_cluster_distances[label] = max_distance
-    
-    data = {
-        'cluster': list(range(1, k+1)),
-        'mean_dist': [round(d, 2) for d in average_intra_cluster_distances.values()],
-        'max_dist': [round(d, 2) for d in max_intra_cluster_distances.values()]
-    }
-
-    write_coords(cntr, f'data/{model}/{k}gw_centroids.csv')
-    pd.DataFrame(data).to_csv(f'{data_dir}/{model}/{k}gw_distances.csv', index=False)
-
-    return cntr
+            opt_kmodel(X, model, metric)
 
 def opt_cmeans():
     ed_coords = generate_ed_coords() 
@@ -438,14 +378,14 @@ def simulate_models():
             clf = models[model](ks[model])
             clf.fit(ed_coords)
             centroids = clf.cluster_centers_
-            plot_kclusters(ed_coords, clf, model)
+            plot_clusters(ed_coords, clf, model)
             simulate(ed_coords, centroids, model)
 
     # Simulating C-Means
     df = pd.read_csv(f'{data_dir}/cmeans/gap/daps.csv', names=['k', 'gap'])
     k = df.loc[df['gap'].idxmax(), 'k']
     ks['cmeans'] = k
-    centroids = plot_cclusters(ed_coords, k)
+    centroids = plot_clusters(ed_coords, k, 'cmeans')
     simulate(ed_coords, centroids, 'cmeans')
     
     plot_copex(ks)
@@ -542,5 +482,5 @@ if __name__ == '__main__':
     #simulate_models()
 
     ed_coords = generate_ed_coords()
-    plot_cclusters(ed_coords, k=16)
-    plot_cclusters(ed_coords, k=16, model='gk')
+    for model in ['kmeans', 'kmedoids', 'cmeans', 'gk']:
+        plot_clusters(ed_coords, 17, model)
