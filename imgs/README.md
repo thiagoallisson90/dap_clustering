@@ -1,1 +1,1 @@
-## Folder to store images file as plots and others
+## Folder to store image files as charts and others
