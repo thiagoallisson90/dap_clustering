@@ -29,16 +29,22 @@ def write_coords(data, filename):
         for d in data:
             file.write(f'{d[0]},{d[1]}\n')
 
-def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, gw_pos_file=gw_pos_file):
+def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, 
+             gw_pos_file=gw_pos_file, radius=10000, load=1):
     script='scratch/dap_clustering.cc'
     n_gw = len(centroids)
     n_simulatons = 30
     
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
+    
+    #os.system(f'rm {data_dir}/{model}/tracker_{n_gw}_unconfirmed_buildings{n_gw}gw.csv')
+    params01 = f'--edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw}'
+    params02 = f'--cModel={model} --radius={radius} --nDevices={len(coords)} --lambda={load}'
+
     for i in range(1, n_simulatons+1):
         run_cmd = \
-            f'{ns3_cmd} run "{script} --edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw} --nRun={i} --cModel={model}"'
+            f'{ns3_cmd} run "{script} {params01} {params02} --nRun={i}"'
         os.system(run_cmd)
 
 def write_scores(data, filename):
