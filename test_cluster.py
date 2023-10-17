@@ -417,7 +417,7 @@ def plot_dists(ks):
 def plot_metrics(ks):
     import seaborn as sns
 
-    n_gws_kmeans, n_gws_kmedoids, n_gws_cmeans = ks['kmeans'], ks['kmedoids'], ks['cmeans'], ks['gk']
+    n_gws_kmeans, n_gws_kmedoids, n_gws_cmeans, n_gws_gk = ks['kmeans'], ks['kmedoids'], ks['cmeans'], ks['gk']
 
     names=['sent', 'received', 'ul-pdr', 'rssi', 'snr', 'delay']
     df_partial_kmeans = \
@@ -430,7 +430,7 @@ def plot_metrics(ks):
         pd.read_csv(f'{data_dir}/cmeans/tracker_1_unconfirmed_buildings{n_gws_cmeans}gw.csv', names=names)
     
     df_partial_cmeans = \
-        pd.read_csv(f'{data_dir}/gk/tracker_1_unconfirmed_buildings{n_gws_cmeans}gw.csv', names=names)
+        pd.read_csv(f'{data_dir}/gk/tracker_1_unconfirmed_buildings{n_gws_gk}gw.csv', names=names)
 
     labels = ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel']
     metrics = ['ul-pdr', 'rssi', 'snr', 'delay']
@@ -439,7 +439,7 @@ def plot_metrics(ks):
     hatches = ['//', '--', '++', 'x']
 
     units = {
-        'ul-pdr': '%',
+        'ul-pdr': ' (%)',
         'rssi': ' (dBm)',
         'snr': ' (dB)',
         'delay': ' (s)',
@@ -454,7 +454,11 @@ def plot_metrics(ks):
         upper_metric = metric.upper()
 
         plt.figure(figsize=(12, 8))
-        sns.boxplot(pd.DataFrame(datas), width=0.5, color=colors, hatch=hatches)
+        
+        ax = sns.boxplot(pd.DataFrame(datas), width=0.5, palette=colors)
+        for i, patch in enumerate(ax.patches):
+            patch.set_hatch(hatches[i])
+
         plt.xlabel('Clustering Models', fontsize=14)
         plt.ylabel(upper_metric + units[metric], fontsize=14)
         plt.xticks(fontsize=12)
@@ -481,18 +485,22 @@ def plot_metrics(ks):
             for i in range(1, n_reps+1)]
 
     gk_energy = \
-        [pd.read_csv(f'{data_dir}/gk/nRun_{i}_{n_gws_cmeans}gws_battery-level.txt', names=names).drop(0, axis=0) \
+        [pd.read_csv(f'{data_dir}/gk/nRun_{i}_{n_gws_gk}gws_battery-level.txt', names=names).drop(0, axis=0) \
             for i in range(1, n_reps+1)]
 
     datas = {
         'K-Means': [(init_energy - df['remainder_energy'].mean()) for df in kmeans_energy],
         'K-Medoids': [(init_energy - df['remainder_energy'].mean()) for df in kmedoids_energy],
         'C-Means': [(init_energy - df['remainder_energy'].mean()) for df in cmeans_energy],
-        'Gustafson-Kessel': [(init_energy - df['remainder_energy'].mean()) for df in cmeans_energy]
+        'Gustafson-Kessel': [(init_energy - df['remainder_energy'].mean()) for df in gk_energy]
     }
 
     plt.figure(figsize=(12, 8))
-    sns.boxplot(pd.DataFrame(datas), width=0.5, color=colors, hatch=hatches)
+    
+    ax = sns.boxplot(pd.DataFrame(datas), width=0.5, palette=colors)
+    for i, patch in enumerate(ax.patches):
+        patch.set_hatch(hatches[i])
+
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('Consumed Energy (J)', fontsize=14)
     plt.xticks(fontsize=12)
