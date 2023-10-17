@@ -54,7 +54,10 @@ def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_o
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
     
-    os.system(f'rm {data_dir}/{model}/tracker_{n_gw}_unconfirmed_buildings{n_gw}gw.csv')
+    with open(f'{data_dir}/{model}/tracker_{load}_unconfirmed_buildings{n_gw}gw.csv', mode="w") as file:
+        file.write('')
+        file.close()
+
     params01 = f'--edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw}'
     params02 = f'--cModel={model} --radius={radius} --nDevices={len(coords)} --lambda={load}'
 
@@ -545,11 +548,11 @@ def test_models(X, ks):
 
     for model in model_names:
         centroids, _, _ = plot_clusters(X, ks[model], model)
-        #simulate(X, centroids, model)
+        simulate(X, centroids, model)
     
     plot_copex(ks)
     plot_dists(ks)
-    #plot_metrics(ks)
+    plot_metrics(ks)
 
 if __name__ == '__main__':
     ed_coords = generate_ed_coords()
