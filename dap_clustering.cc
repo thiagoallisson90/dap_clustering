@@ -97,7 +97,7 @@ WriteInLog (std::string output)
   if (ofs.is_open ())
     {
       //sent,received,pdr,rssi,snr,delay
-      ofs << output << (clusteringModel == "tests" ? "," + std::to_string ((int)radius) : "") << std::endl;
+      ofs << output << (clusteringModel == "tests" ? "," + std::to_string (radius) : "") << std::endl;
       ofs.close ();
     }
 }
@@ -445,7 +445,6 @@ main (int argc, char *argv[])
   /************************
    * Install Energy Model *
    ************************/
-
   BasicEnergySourceHelper basicSourceHelper;
   LoraRadioEnergyModelHelper radioEnergyHelper;
 
@@ -494,12 +493,9 @@ main (int argc, char *argv[])
   //////////
   // Logs //
   //////////
-  if (clusteringModel == "tests")
-    {
-      std::string phyName = baseDir + "data/" + clusteringModel + "/nRun_" + std::to_string (nRun) + "_phy_" 
-        + std::to_string (nGateways) + "gw.csv";
-      helper.EnablePeriodicPhyPerformancePrinting (gateways, phyName, Time (simulationTime));
-    }
+  /*std::string phyName = baseDir + "data/" + clusteringModel + "/nRun_" + std::to_string (nRun) + "_phy_" 
+    + std::to_string (nGateways) + "gw.csv";
+  helper.EnablePeriodicPhyPerformancePrinting (gateways, phyName, Time (appStopTime));*/
 
   ////////////////
   // Simulation //
