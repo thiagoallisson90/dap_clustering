@@ -79,7 +79,7 @@ def rand_cluster(X, n_clusters=2):
 
     return clf.cluster_centers, clf.labels, clf.cluster_points(X)
 
-run_model = {
+run_clustering = {
     'kmeans': kmeans_cluster,
     'kmedoids':  kmedoids_cluster,
     'cmeans': cm_cluster,
