@@ -80,7 +80,7 @@ class RandFactory(Factory):
     from sklearn.metrics import pairwise_distances
     from dap_utils import generate_ed_coords
 
-    self.cluster_centers = generate_ed_coords(self.n_clusters, seed=None)
+    self.cluster_centers = generate_ed_coords(self.n_clusters)
     dists = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
     self.labels = [np.argmin(dist) for dist in dists]
 
