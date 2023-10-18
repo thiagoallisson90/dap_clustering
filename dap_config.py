@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import os
 from dap_utils import data_dir, img_dir
 
