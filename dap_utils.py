@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from dap_vars import *
 
+#####################
+# Utility Functions #
+#####################
+
 def generate_ed_coords(n_points=2000, axis_range = 10000, seed=42):
   np.random.seed(seed)
   x = np.random.uniform(0, axis_range, n_points)
@@ -80,3 +84,21 @@ def test_coverage():
     plt.title(f'Maximium Coverage Radius Analysis', fontsize=16)
     plt.savefig(f'{img_dir}/tests/max_radius.png')
     plt.clf()
+
+def capex_opex_calc(n_daps):
+    CBs, Cins, Cset, Txinst = 1, 2, 0.1, 4
+
+    Cman = 0.125
+    # Clease, Celet, Ctrans, t = 1, 1, 0.1, 1
+
+    capex = n_daps * (CBs + Cins + Cset + Txinst)
+    #opex = (Cman*capex + n_gws * (Clease + Celet + Ctrans)) * t
+    opex = (Cman * capex + n_daps)
+
+    return capex, opex
+
+def write_scores(data, filename):
+    with open(f'{base_dir}/{filename}', mode='a') as file:
+        file.write(f'{data["k"]},{data["score"]}\n')
+
+#####################
