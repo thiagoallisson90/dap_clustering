@@ -5,8 +5,8 @@ from sklearn.metrics import pairwise_distances
 import pandas as pd
 
 from dap_clustering import run_clustering
-from dap_vars import img_dir, data_dir, model_names, base_dir
-from dap_utils import write_coords
+from dap_vars import clustering_models, img_dir, data_dir, model_names, base_dir
+from dap_utils import capex_opex_calc, write_coords
 
 ######################
 # Plotting Functions #
@@ -51,7 +51,11 @@ def plot_clusters(X, k, model='kmeans'):
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
 
-    plt.title('Number of SMs in each Cluster', fontsize=16)
+    title_name = model_names[model]
+    if model == 'rand':
+        title_name = title_name + str(k) 
+
+    plt.title(f'Number of SMs in each Cluster {title_name}', fontsize=16)
     plt.savefig(f'{img_dir}/{model}/{k}gw_chart.png', bbox_inches='tight')
     plt.clf()
 
@@ -79,26 +83,16 @@ def plot_clusters(X, k, model='kmeans'):
 
     return cntr, labels, cluster_points
 
-"""def plot_copex(ks):
-    n_gws_kmeans, n_gws_kmedoids, n_gws_cmeans, n_gws_gk = \
-        ks['kmeans'], ks['kmedoids'], ks['cmeans'], ks['gk']
-    
-    capex1, opex1 = capex_opex_calc(n_gws_kmeans)
-    capex2, opex2 = capex_opex_calc(n_gws_kmedoids)
-    capex3, opex3 = capex_opex_calc(n_gws_cmeans)
-    capex4, opex4 = capex_opex_calc(n_gws_gk)
+def plot_copex(ks, scenario_labels, text):
+    capex_values, opex_values = [], []
+    for _, k in ks.items():
+        data = capex_opex_calc(k)
+        capex_values.append(data[0])
+        opex_values.append(data[1])
 
-    capex_values = [capex1, capex2, capex3, capex4]
-    opex_values = [opex1, opex2, opex3, opex4]
-
-    scenario_labels = ['K-Means', 'K-Medoids', 'C-Means', 'Gustafson-Kessel']
-    #colors = ['red', 'green', 'blue', 'orange']
-    colors = ['0.2', '0.4', '0.6', '0.8']
-    hatches = ['//', '--', '++', 'x']
-    text = 'K-Means, K-Medoids, C-Means and Gustafson-Kessel'
-
+    colors = plt.cm.rainbow(np.linspace(0, 1, k))
     plt.figure(figsize=(12, 8))
-    plt.bar(scenario_labels, capex_values, color=colors, hatch=hatches)
+    plt.bar(scenario_labels, capex_values, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('CapEx (K€)', fontsize=14)
     plt.xticks(fontsize=12)
@@ -112,7 +106,7 @@ def plot_clusters(X, k, model='kmeans'):
     plt.clf()
 
     plt.figure(figsize=(12, 8))
-    plt.bar(scenario_labels, opex_values, color=colors, hatch=hatches)
+    plt.bar(scenario_labels, opex_values, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('OpEx (K€)', fontsize=14)
     plt.xticks(fontsize=12)
@@ -124,7 +118,7 @@ def plot_clusters(X, k, model='kmeans'):
     
     plt.savefig(f'{img_dir}/opex_models.png')
     plt.clf()
-
+"""
 def plot_dists(ks):
     kmeans_dists = pd.read_csv(f'{data_dir}/kmeans/{ks["kmeans"]}gw_distances.csv')
     kmedoids_dists = pd.read_csv(f'{data_dir}/kmedoids/{ks["kmedoids"]}gw_distances.csv')
@@ -256,7 +250,4 @@ def plot_metrics(ks):
     plt.savefig(f'{img_dir}/energy_models.png')
     plt.clf()
 """
-from dap_utils import generate_ed_coords
-plot_clusters(generate_ed_coords(), 16)
-
 ######################

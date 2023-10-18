@@ -6,4 +6,4 @@
   * chmod +x dap_config.py
   * ./dap_config.py
   * P.S.: If any error to be presented, so check the first instruction on the script and swap to python instead python3
-3. Run main.py
+3. Make test script and run this
