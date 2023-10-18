@@ -13,8 +13,8 @@ ed_out_file = 'ed_out_file.csv'
 gw_pos_file = 'gw_pos_file.csv'
 ns3_cmd = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/./ns3'
 
-def generate_ed_coords(n_points=2000, axis_range = 10000):
-  np.random.seed(42)
+def generate_ed_coords(n_points=2000, axis_range = 10000, seed=42):
+  np.random.seed(seed)
   x = np.random.uniform(0, axis_range, n_points)
   y = np.random.uniform(0, axis_range, n_points)
 
@@ -36,7 +36,10 @@ def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_o
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
     
-    os.system(f'rm {data_dir}/{model}/tracker_{n_gw}_unconfirmed_buildings{n_gw}gw.csv')
+    with open(f'{data_dir}/{model}/tracker_{load}_unconfirmed_buildings{n_gw}gw.csv', mode="w") as file:
+        file.write('')
+        file.close()
+        
     params01 = f'--edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw}'
     params02 = f'--cModel={model} --radius={radius} --nDevices={len(coords)} --lambda={load}'
 
@@ -64,8 +67,8 @@ def test_coverage():
             radius_ok = radius
             df_ok = df
     
-        #os.system('clear')
-    #os.system('clear')
+        os.system('clear')
+    os.system('clear')
 
     key1 = str(radius_ok)
 
@@ -88,6 +91,7 @@ def test_coverage():
     #plt.show()
     plt.clf()
 
-
+"""
 if __name__ == '__main__':
     test_coverage()
+"""
