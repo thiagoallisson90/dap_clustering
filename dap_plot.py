@@ -256,5 +256,7 @@ def plot_metrics(ks):
     plt.savefig(f'{img_dir}/energy_models.png')
     plt.clf()
 """
+from dap_utils import generate_ed_coords
+plot_clusters(generate_ed_coords(), 16)
 
 ######################
