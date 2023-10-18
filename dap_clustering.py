@@ -1,15 +1,8 @@
-import numpy as np
-from sklearn.metrics import pairwise_distances
-from sklearn.cluster import KMeans
-from sklearn_extra.cluster import KMedoids
-from fcluster import FCluster
-from skfuzzy.cluster import cmeans
-from dap_utils import generate_ed_coords
-
 ##################
 # DAP Clustering #
 ##################
 
+"""
 def clustering(X, n_clusters, labels):
     cluster_points = [[] for _ in range(n_clusters)]
     for i, label in enumerate(labels):
@@ -44,14 +37,47 @@ def kmedoids_cluster(X, n_clusters=2):
     cluster_points = clustering(X, n_clusters, clf.labels_)
 
     return clf.cluster_centers_, clf.labels_, cluster_points
+"""
 
-def rand_cluster(X, n_clusters=16):
-    cntr = generate_ed_coords(n_clusters, seed=None)
-    dists = pairwise_distances(X, cntr, n_jobs=-1)
-    labels = [np.argmin(dist) for dist in dists]
-    cluster_points = clustering(X, n_clusters, labels)
-    
-    return cntr, labels, cluster_points
+def kmeans_cluster(X, n_clusters=2):
+    from dap_factory import KMeansFactory
+
+    clf = KMeansFactory(n_clusters)
+    clf.fit(X)
+
+    return clf.cluster_centers, clf.labels, clf.cluster_points(X)
+
+def kmedoids_cluster(X, n_clusters=2):
+    from dap_factory import KMedoidsFactory
+
+    clf = KMedoidsFactory(n_clusters)
+    clf.fit(X)
+
+    return clf.cluster_centers, clf.labels, clf.cluster_points(X)
+
+def cm_cluster(X, n_clusters=2):
+    from dap_factory import CMeansSKFactory
+
+    clf = CMeansSKFactory(n_clusters)
+    clf.fit(X)
+
+    return clf.cluster_centers, clf.labels, clf.cluster_points(X)
+
+def gk_cluster(X, n_clusters=2):
+    from dap_factory import GKFactory
+
+    clf = GKFactory(n_clusters)
+    clf.fit(X)
+
+    return clf.cluster_centers, clf.labels, clf.cluster_points(X)
+
+def rand_cluster(X, n_clusters=2):
+    from dap_factory import RandFactory
+
+    clf = RandFactory(n_clusters)
+    clf.fit(X)
+
+    return clf.cluster_centers, clf.labels, clf.cluster_points(X)
 
 run_model = {
     'kmeans': kmeans_cluster,
