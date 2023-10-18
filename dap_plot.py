@@ -12,6 +12,12 @@ from dap_utils import capex_opex_calc, write_coords
 # Plotting Functions #
 ######################
 
+def define_colors(k):
+    np.random.seed(42)
+    colors = [(np.random.random(), np.random.random(), np.random.random()) for _ in range(k)]
+    np.random.seed(None)
+    return colors
+
 def plot_clusters(X, k, model='kmeans'):
     cntr, labels, cluster_points = run_clustering[model](X, k)
 
@@ -83,14 +89,23 @@ def plot_clusters(X, k, model='kmeans'):
 
     return cntr, labels, cluster_points
 
-def plot_copex(ks, scenario_labels, text):
+def plot_copex(ks, scenario_labels):
     capex_values, opex_values = [], []
     for _, k in ks.items():
         data = capex_opex_calc(k)
         capex_values.append(data[0])
         opex_values.append(data[1])
 
-    colors = plt.cm.rainbow(np.linspace(0, 1, k))
+    text = ''
+    for i, label in enumerate(scenario_labels):
+        if i < len(scenario_labels) - 1:
+            text = text + ', ' + label
+        else:
+            text = text + ' and ' + label
+            
+    #colors = plt.cm.viridis(np.linspace(0, 2, k))
+    colors = define_colors(k)
+
     plt.figure(figsize=(12, 8))
     plt.bar(scenario_labels, capex_values, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
@@ -250,5 +265,15 @@ def plot_metrics(ks):
     plt.savefig(f'{img_dir}/energy_models.png')
     plt.clf()
 """
+
+plot_copex(ks={
+    'kmeans': 17,
+    'kmedoids': 16,
+    'cmeans': 16,
+    'gk': 16,
+    'rand16': 16,
+    'rand25': 25,
+}, scenario_labels=
+  ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel', 'Rand16', 'Rand25'])
 
 ######################
