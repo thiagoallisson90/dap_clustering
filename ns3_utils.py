@@ -31,7 +31,7 @@ def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_o
              gw_pos_file=gw_pos_file, radius=10000, load=1):
     script='scratch/dap_clustering.cc'
     n_gw = len(centroids)
-    n_simulatons = 30
+    n_simulatons = 1
     
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
@@ -64,8 +64,8 @@ def test_coverage():
             radius_ok = radius
             df_ok = df
     
-        os.system('clear')
-    os.system('clear')
+        #os.system('clear')
+    #os.system('clear')
 
     key1 = str(radius_ok)
 

@@ -31,8 +31,8 @@ ns3_cmd = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/./ns3'
 #####################
 # General Functions #
 #####################
-def generate_ed_coords(n_points=2000, axis_range = 10000):
-  np.random.seed(42)
+def generate_ed_coords(n_points=2000, axis_range = 10000, seed=42):
+  np.random.seed(seed)
   x = np.random.uniform(0, axis_range, n_points)
   y = np.random.uniform(0, axis_range, n_points)
 
@@ -120,11 +120,15 @@ def kmedoids_cluster(X, n_clusters=2):
 
     return clf.cluster_centers_, clf.labels_, cluster_points
 
+def rand_cluster(X, n_cluster=16):
+    cluster_centers = generate_ed_coords(n_cluster, seed=None)
+
 run_model = {
     'kmeans': kmeans_cluster,
     'kmedoids':  kmedoids_cluster,
     'cmeans': cm_cluster,
     'gk': gk_cluster,
+    'rand': rand_cluster,
 }
 
 def elbow(X, k_lims, model='kmeans'):
@@ -266,8 +270,9 @@ def plot_clusters(X, k, model='kmeans'):
         'kmedoids': 'K-Medoids',
         'cmeans':  'Fuzzy C-Means',
         'gk': 'Gustafson-Kessel Clustering',
+        'rand16': 'Rand16',
+        'rand25': 'Rand25',
     }
-
     cntr, labels, cluster_points = run_model[model](X, k)
 
     colors = plt.cm.rainbow(np.linspace(0, 1, k))
@@ -552,10 +557,8 @@ def simulate_models():
     plot_metrics(ks)
 
 def test_models(X, ks):
-    model_names = ['kmeans', 'kmedoids', 'cmeans', 'gk']
-
-    for model in model_names:
-        centroids, _, _ = plot_clusters(X, ks[model], model)
+    for model, k in ks.items():
+        centroids, _, _ = plot_clusters(X, k, model)
         simulate(X, centroids, model)
     
     plot_copex(ks)
@@ -569,7 +572,7 @@ if __name__ == '__main__':
         'kmeans': 17,
         'kmedoids': 16,
         'cmeans': 16,
-        'gk': 16
+        'gk': 16,
     }
     test_models(ed_coords, ks)
 
