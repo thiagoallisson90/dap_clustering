@@ -12,8 +12,8 @@ from dap_utils import capex_opex_calc, write_coords
 # Plotting Functions #
 ######################
 
-def define_colors(k):
-    np.random.seed(42)
+def define_colors(k, seed=42):
+    np.random.seed(seed)
     colors = [(np.random.random(), np.random.random(), np.random.random()) for _ in range(k)]
     np.random.seed(None)
     return colors
@@ -98,13 +98,14 @@ def plot_copex(ks, scenario_labels):
 
     text = ''
     for i, label in enumerate(scenario_labels):
-        if i < len(scenario_labels) - 1:
+        if(i == 0):
+            text = text + label
+        elif(i < len(scenario_labels) - 1):
             text = text + ', ' + label
-        else:
+        elif(i == len(scenario_labels) - 1):
             text = text + ' and ' + label
             
-    #colors = plt.cm.viridis(np.linspace(0, 2, k))
-    colors = define_colors(k)
+    colors = define_colors(len(ks))
 
     plt.figure(figsize=(12, 8))
     plt.bar(scenario_labels, capex_values, color=colors)
@@ -133,30 +134,29 @@ def plot_copex(ks, scenario_labels):
     
     plt.savefig(f'{img_dir}/opex_models.png')
     plt.clf()
-"""
-def plot_dists(ks):
-    kmeans_dists = pd.read_csv(f'{data_dir}/kmeans/{ks["kmeans"]}gw_distances.csv')
-    kmedoids_dists = pd.read_csv(f'{data_dir}/kmedoids/{ks["kmedoids"]}gw_distances.csv')
-    cmeans_dists = pd.read_csv(f'{data_dir}/cmeans/{ks["cmeans"]}gw_distances.csv')
-    gk_dists = pd.read_csv(f'{data_dir}/gk/{ks["gk"]}gw_distances.csv')
 
-    models = ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel']
-    mean_dist = [kmeans_dists['mean_dist'].mean(), kmedoids_dists['mean_dist'].mean(), 
-                 cmeans_dists['mean_dist'].mean(), gk_dists['mean_dist'].mean()]
-    max_dist = [kmeans_dists['max_dist'].mean(), kmedoids_dists['max_dist'].mean(), 
-                cmeans_dists['max_dist'].mean(), gk_dists['max_dist'].mean()]
+def plot_dists(ks, scenario_labels):
+    mean_dist, max_dist = [], []
+    for model, k in ks.items():
+      df = None
+      if(not ('rand' in model)):
+          df = pd.read_csv(f'{data_dir}/{model}/{k}gw_distances.csv')
+      else:
+          df = pd.read_csv(f'{data_dir}/rand/{k}gw_distances.csv')
+      mean_dist.append(df['mean_dist'].mean())
+      max_dist.append(df['max_dist'].mean())
 
     width = 0.35
-    x = np.arange(len(models))
+    x = np.arange(len(ks))
 
     plt.figure(figsize=(12, 8))
-    plt.bar(x, mean_dist, width, label='Mean Distance', color='0.3', hatch='//')
-    plt.bar(x + width, max_dist, width, label='Maximium Distance', color='0.6', hatch='x')
+    plt.bar(x, mean_dist, width, label='Mean Distance', color='blue', hatch='++')
+    plt.bar(x + width, max_dist, width, label='Maximium Distance', color='green', hatch='x')
 
     plt.xlabel('Clustering Algorithms', fontsize=14)
     plt.ylabel('Distances (m)', fontsize=14)
     plt.title('Intra-cluster Distances', fontsize=16)
-    plt.xticks(x + width / 2, models, fontsize=12)
+    plt.xticks(x + width / 2, scenario_labels, fontsize=12)
     plt.yticks(fontsize=12)
 
     for i, (mean_value, max_value) in enumerate(zip(mean_dist, max_dist)):
@@ -168,6 +168,7 @@ def plot_dists(ks):
     plt.savefig(f'{img_dir}/dists_models.png')
     plt.clf()
 
+"""
 def plot_metrics(ks):
     import seaborn as sns
 
@@ -265,15 +266,18 @@ def plot_metrics(ks):
     plt.savefig(f'{img_dir}/energy_models.png')
     plt.clf()
 """
-
-plot_copex(ks={
+ks={
     'kmeans': 17,
     'kmedoids': 16,
     'cmeans': 16,
     'gk': 16,
     'rand16': 16,
     'rand25': 25,
-}, scenario_labels=
-  ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel', 'Rand16', 'Rand25'])
+}
+scenario_labels= \
+  ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel', 'Rand16', 'Rand25']
+
+plot_copex(ks, scenario_labels)
+plot_dists(ks, scenario_labels)
 
 ######################
