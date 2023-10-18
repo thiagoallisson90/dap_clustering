@@ -5,7 +5,6 @@ from sklearn_extra.cluster import KMedoids
 from fcluster import FCluster
 from skfuzzy.cluster import cmeans
 from dap_utils import generate_ed_coords
-from dap_vars import *
 
 ##################
 # DAP Clustering #
