@@ -56,7 +56,7 @@ class CMeansSKFactory(Factory):
     
 class CMeansFCFactory(Factory):
   def __init__(self, n_clusters=2):
-    from littoral.cluster.dap_fcluster import FCluster
+    from littoral.algorithms.dap_fcluster import FCluster
     super().__init__(n_clusters)
     self.name = 'Fuzzy C-Means'
     self.clf = FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000)
@@ -67,7 +67,7 @@ class CMeansFCFactory(Factory):
   
 class GKFactory(Factory):
   def __init__(self, n_clusters=2):
-    from littoral.cluster.dap_fcluster import FCluster
+    from littoral.algorithms.dap_fcluster import FCluster
     super().__init__(n_clusters)
     self.name = 'Gustafson-Kessel'
     self.clf = \
