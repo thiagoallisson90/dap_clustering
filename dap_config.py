@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import os
-from dap_utils import data_dir, img_dir
+from littoral.system.dap_utils import clustering_models, data_dir, img_dir
 
 if __name__ == '__main__':
   if not (os.path.exists(data_dir) and os.path.isdir(data_dir)):
@@ -20,8 +20,6 @@ if __name__ == '__main__':
     input('Do you want to create subfolders whose names are defined on the variable named clustering_models? (y or n): ')
   
   if(confirm.lower() == 'y'):
-    from dap_utils import clustering_models
-
     for model in clustering_models:
       data_name = f'{data_dir}/{model}'
       img_name = f'{img_dir}/{model}'
