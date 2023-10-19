@@ -4,17 +4,16 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from sklearn.metrics import pairwise_distances
 import pandas as pd
 
-from dap_clustering import run_clustering
-from dap_vars import clustering_models, img_dir, data_dir, model_names, base_dir
-from dap_utils import capex_opex_calc, write_coords, define_colors
+from littoral.system.dap_clustering import run_clustering
+from littoral.system.dap_vars import img_dir, data_dir, model_names, base_dir
+from littoral.system.dap_utils import capex_opex_calc, write_coords, define_colors
 
 ######################
 # Plotting Functions #
 ######################
 
-def plot_clusters(X, k, model='kmeans'):
-    cntr, labels, cluster_points = run_clustering[model](X, k)
-
+def plot_clusters(X, cntr, labels, cluster_points, model_name, folder_name):
+    k = len(cntr)
     colors = plt.cm.rainbow(np.linspace(0, 1, k))
 
     plt.figure(figsize=(12, 8))
@@ -24,7 +23,7 @@ def plot_clusters(X, k, model='kmeans'):
     plt.ylabel('Y', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(f'{model_names[model]}', fontsize=16)
+    plt.title(model_name, fontsize=16)
 
     image_path = f'{base_dir}/antenna.jpg'
     image = plt.imread(image_path)
@@ -34,7 +33,7 @@ def plot_clusters(X, k, model='kmeans'):
         plt.gca().add_artist(ab)
         plt.text(centroid[0] + 1, centroid[1], f'     {i+1}', fontsize=16, fontweight="bold")
 
-    plt.savefig(f'{img_dir}/{model}/{k}gw.png')
+    plt.savefig(f'{img_dir}/{folder_name}/{k}gw.png')
     plt.clf()
 
     cluster_counts = np.bincount(labels)
@@ -50,18 +49,13 @@ def plot_clusters(X, k, model='kmeans'):
     plt.ylabel('Clusters', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-
-    title_name = model_names[model]
-    if model == 'rand':
-        title_name = title_name + str(k) 
-
-    plt.title(f'Number of SMs in each Cluster {title_name}', fontsize=16)
-    plt.savefig(f'{img_dir}/{model}/{k}gw_chart.png', bbox_inches='tight')
+    plt.title(f'Number of SMs in each Cluster {model_name}', fontsize=16)
+    plt.savefig(f'{img_dir}/{folder_name}/{k}gw_chart.png', bbox_inches='tight')
     plt.clf()
 
     intra_cluster_distances = {}
     for label, points in enumerate(cluster_points):
-        distances = pairwise_distances(points, metric='euclidean')
+        distances = pairwise_distances(points, metric='euclidean', n_jobs=-1)
         intra_cluster_distances[label] = distances
 
     average_intra_cluster_distances = {}
@@ -78,36 +72,28 @@ def plot_clusters(X, k, model='kmeans'):
         'max_dist': [round(d, 2) for d in max_intra_cluster_distances.values()]
     }
 
-    write_coords(cntr, f'data/{model}/{k}gw_centroids.csv')
-    pd.DataFrame(data).to_csv(f'{data_dir}/{model}/{k}gw_distances.csv', index=False)
+    write_coords(cntr, f'data/{folder_name}/{k}gw_centroids.csv')
+    df = pd.DataFrame(data)
+    df.to_csv(f'{data_dir}/{folder_name}/{k}gw_distances.csv', index=False)
 
-    return cntr, labels, cluster_points
+    return df
 
-def plot_copex(ks, scenario_labels):
+def plot_copex(ks, labels, capex_text='CapEx', opex_text='OpEx'):
     capex_values, opex_values = [], []
-    for _, k in ks.items():
+    for k in ks:
         data = capex_opex_calc(k)
         capex_values.append(data[0])
         opex_values.append(data[1])
-
-    text = ''
-    for i, label in enumerate(scenario_labels):
-        if(i == 0):
-            text = text + label
-        elif(i < len(scenario_labels) - 1):
-            text = text + ', ' + label
-        elif(i == len(scenario_labels) - 1):
-            text = text + ' and ' + label
             
     colors = define_colors(len(ks))
 
     plt.figure(figsize=(12, 8))
-    plt.bar(scenario_labels, capex_values, color=colors)
+    plt.bar(labels, capex_values, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('CapEx (K€)', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(f'CapEx - {text}', fontsize=16)
+    plt.title(capex_text, fontsize=16)
 
     for i, value in enumerate(capex_values):
         plt.text(i, value, f'{value:.2f}', ha='center', va='bottom', fontsize=12)
@@ -116,12 +102,12 @@ def plot_copex(ks, scenario_labels):
     plt.clf()
 
     plt.figure(figsize=(12, 8))
-    plt.bar(scenario_labels, opex_values, color=colors)
+    plt.bar(labels, opex_values, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('OpEx (K€)', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(f'OpEx - {text}', fontsize=16)
+    plt.title(opex_text, fontsize=16)
     
     for i, value in enumerate(opex_values):
         plt.text(i, value, f'{value:.2f}', ha='center', va='bottom', fontsize=12)
@@ -129,17 +115,7 @@ def plot_copex(ks, scenario_labels):
     plt.savefig(f'{img_dir}/opex_models.png')
     plt.clf()
 
-def plot_dists(ks, scenario_labels):
-    mean_dist, max_dist = [], []
-    for model, k in ks.items():
-      df = None
-      if(not ('rand' in model)):
-          df = pd.read_csv(f'{data_dir}/{model}/{k}gw_distances.csv')
-      else:
-          df = pd.read_csv(f'{data_dir}/rand/{k}gw_distances.csv')
-      mean_dist.append(df['mean_dist'].mean())
-      max_dist.append(df['max_dist'].mean())
-
+def plot_dists(ks, labels, mean_dist, max_dist):
     width = 0.35
     x = np.arange(len(ks))
 
@@ -150,7 +126,7 @@ def plot_dists(ks, scenario_labels):
     plt.xlabel('Clustering Algorithms', fontsize=14)
     plt.ylabel('Distances (m)', fontsize=14)
     plt.title('Intra-cluster Distances', fontsize=16)
-    plt.xticks(x + width / 2, scenario_labels, fontsize=12)
+    plt.xticks(x + width / 2, labels, fontsize=12)
     plt.yticks(fontsize=12)
 
     for i, (mean_value, max_value) in enumerate(zip(mean_dist, max_dist)):
@@ -260,18 +236,5 @@ def plot_metrics(ks):
     plt.savefig(f'{img_dir}/energy_models.png')
     plt.clf()
 """
-ks={
-    'kmeans': 17,
-    'kmedoids': 16,
-    'cmeans': 16,
-    'gk': 16,
-    'rand16': 16,
-    'rand25': 25,
-}
-scenario_labels= \
-  ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel', 'Rand16', 'Rand25']
-
-plot_copex(ks, scenario_labels)
-plot_dists(ks, scenario_labels)
 
 ######################

@@ -23,6 +23,7 @@ class KMeansFactory(Factory):
   def __init__(self, n_clusters=2):
     from sklearn.cluster import KMeans
     super().__init__(n_clusters)
+    self.name = 'K-Means'
     self.clf = KMeans(n_clusters, n_init='auto', init='k-means++')
   
   def fit(self, X):
@@ -34,6 +35,7 @@ class KMedoidsFactory(Factory):
   def __init__(self, n_clusters=2):
     from sklearn_extra.cluster import KMedoids
     super().__init__(n_clusters)
+    self.name = 'K-Medoids'
     self.clf = KMedoids(n_clusters)
   
   def fit(self, X):
@@ -44,6 +46,7 @@ class KMedoidsFactory(Factory):
 class CMeansSKFactory(Factory):
   def __init__(self, n_clusters=2):
     super().__init__(n_clusters)
+    self.name = 'Fuzzy C-Means'
 
   def fit(self, X):
     from skfuzzy.cluster import cmeans
@@ -55,6 +58,7 @@ class CMeansFCFactory(Factory):
   def __init__(self, n_clusters=2):
     from littoral.cluster.dap_fcluster import FCluster
     super().__init__(n_clusters)
+    self.name = 'Fuzzy C-Means'
     self.clf = FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000)
 
   def fit(self, X):
@@ -65,6 +69,7 @@ class GKFactory(Factory):
   def __init__(self, n_clusters=2):
     from littoral.cluster.dap_fcluster import FCluster
     super().__init__(n_clusters)
+    self.name = 'Gustafson-Kessel'
     self.clf = \
       FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000, method='Gustafson–Kessel')
   
@@ -75,10 +80,11 @@ class GKFactory(Factory):
 class RandFactory(Factory):
   def __init__(self, n_clusters=2):
     super().__init__(n_clusters)
+    self.name = 'Rand' + str(n_clusters)
   
   def fit(self, X):
     from sklearn.metrics import pairwise_distances
-    from dap_utils import generate_ed_coords
+    from littoral.system.dap_utils import generate_ed_coords
 
     self.cluster_centers = generate_ed_coords(self.n_clusters)
     dists = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
