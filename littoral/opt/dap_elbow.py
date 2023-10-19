@@ -2,9 +2,9 @@ from yellowbrick.cluster import KElbowVisualizer
 import matplotlib.pyplot as plt
 from collections import Counter
 
-##########################################
-# Optimization of the number of clusters #
-##########################################
+#######################################
+# Optimizating the number of clusters #
+#######################################
 
 def elbow(X, ks, model, metric='distortion'):
     max_iters = 100
@@ -20,4 +20,4 @@ def elbow(X, ks, model, metric='distortion'):
     print(c)
     return c.most_common()[0]
 
-##########################################
+#######################################
