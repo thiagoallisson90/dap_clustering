@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
     * Link: https://www.kaggle.com/code/tatamikenn/implement-clustering-algorithms-from-scratch
 """
 
-class CustomKMeans:
+class DapKMeans:
     def __init__(self, k, max_iter=300, verbose=False):
         self.k = k
         self.max_iter = max_iter
@@ -50,7 +50,7 @@ class CustomKMeans:
         return self.labels, self.centroids, self.cluster_center_history, self.clusters
 
 
-class CustomKMedoids:
+class DapKMedoids:
     def __init__(self, k, max_iter=300, verbose=False):
         self.k = k
         self.max_iter = max_iter
