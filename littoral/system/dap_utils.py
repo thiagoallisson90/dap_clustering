@@ -11,7 +11,7 @@ from littoral.system.dap_vars import *
 
 def generate_ed_coords(n_points=2000, axis_range=10000, seed=42):
   np.random.seed(seed)
-  coords = np.random.uniform(0, axis_range+1, (n_points, 2))
+  coords = np.random.uniform(0, axis_range, (n_points, 2))
   np.random.seed(None)
   
   return coords
