@@ -6,11 +6,11 @@ from littoral.system.dap_vars import ed_pos_file, ed_out_file, gw_pos_file
 from littoral.system.dap_vars import data_dir, ns3_cmd
 
 def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, 
-             gw_pos_file=gw_pos_file, radius=10000, load=1):
+             gw_pos_file=gw_pos_file, radius=10000, load=5):
     script='scratch/dap_clustering.cc'
     n_gw = len(centroids)
     n_simulatons = 30
-    
+
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
     filename = f'{data_dir}/{folder}/tracker_{load}_unconfirmed_buildings{n_gw}gw.csv'

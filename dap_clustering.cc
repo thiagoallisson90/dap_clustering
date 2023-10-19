@@ -89,7 +89,7 @@ Format(double v, int digits=4) {
 void 
 WriteInLog (std::string output)
 {
-  std::string fileName = baseDir + "data/" + clusteringModel + "/" + "tracker_" + Format(lambda, 2) + "_" 
+  std::string fileName = baseDir + "data/" + clusteringModel + "/" + "tracker_" + Format(lambda, 1) + "_" 
                         + trafficStrs[traffic] + "_" + models[realisticChannelModel] + std::to_string(nGateways) 
                         + "gw.csv";
   std::ofstream ofs;
@@ -201,12 +201,13 @@ main (int argc, char *argv[])
     RngSeedManager::SetRun(nRun);    
 
   simulationTime = nDevices;
+  double realLambda = 1.0 / (lambda * 60);
 
-  appPeriodSeconds = simulationTime / lambda;
+  appPeriodSeconds = simulationTime / realLambda;
   //simulationTime = simulationTime / lambda * nSimulation;
-  simulationTime = simulationTime / lambda * 1;
+  simulationTime = simulationTime / realLambda;
 
-  std::cout << "Lambda=" << lambda << "," << "Simulation Time=" << simulationTime << "," << "App Period=" 
+  std::cout << "Lambda in min =" << lambda << "," << "Simulation Time=" << simulationTime << "," << "App Period=" 
             << appPeriodSeconds << "," << "Number of Gateways=" << nGateways << std::endl;
 
   // Set up logging
