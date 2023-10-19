@@ -11,12 +11,10 @@ from littoral.system.dap_vars import *
 
 def generate_ed_coords(n_points=2000, axis_range = 10000, seed=42):
   np.random.seed(seed)
-  x = np.random.uniform(0, axis_range, n_points)
-  y = np.random.uniform(0, axis_range, n_points)
-
+  coords = np.random.uniform(0, axis_range+1, (2000, 2))
   np.random.seed(None)
   
-  return np.column_stack((x, y))
+  return coords
 
 def write_coords(data, filename):
     with open(f'{base_dir}/{filename}', mode='w') as file:
