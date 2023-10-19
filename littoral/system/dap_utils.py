@@ -101,4 +101,11 @@ def write_scores(data, filename):
     with open(f'{base_dir}/{filename}', mode='a') as file:
         file.write(f'{data["k"]},{data["score"]}\n')
 
+def define_colors(k, seed=42):
+    np.random.seed(seed)
+    colors = \
+        [(np.random.random(), np.random.random(), np.random.random()) for _ in range(k)]
+    np.random.seed(None)
+    return colors
+
 #####################

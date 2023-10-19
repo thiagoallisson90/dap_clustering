@@ -53,7 +53,7 @@ class CMeansSKFactory(Factory):
     
 class CMeansFCFactory(Factory):
   def __init__(self, n_clusters=2):
-    from fcluster import FCluster
+    from littoral.cluster.fcluster import FCluster
     super().__init__(n_clusters)
     self.clf = FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000)
 
@@ -63,7 +63,7 @@ class CMeansFCFactory(Factory):
   
 class GKFactory(Factory):
   def __init__(self, n_clusters=2):
-    from fcluster import FCluster
+    from littoral.cluster.fcluster import FCluster
     super().__init__(n_clusters)
     self.clf = \
       FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000, method='Gustafson–Kessel')

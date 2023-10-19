@@ -6,17 +6,11 @@ import pandas as pd
 
 from dap_clustering import run_clustering
 from dap_vars import clustering_models, img_dir, data_dir, model_names, base_dir
-from dap_utils import capex_opex_calc, write_coords
+from dap_utils import capex_opex_calc, write_coords, define_colors
 
 ######################
 # Plotting Functions #
 ######################
-
-def define_colors(k, seed=42):
-    np.random.seed(seed)
-    colors = [(np.random.random(), np.random.random(), np.random.random()) for _ in range(k)]
-    np.random.seed(None)
-    return colors
 
 def plot_clusters(X, k, model='kmeans'):
     cntr, labels, cluster_points = run_clustering[model](X, k)
