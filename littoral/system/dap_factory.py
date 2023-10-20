@@ -62,7 +62,7 @@ class KMedoidsFactory(Factory):
     }
   
   def create(self, n_clusters=2):
-    self.clf = KMedoids(n_clusters)
+    self.clf = KMedoids(n_clusters, init='k-medoids++')
     return self
   
   def fit(self, X):
@@ -71,7 +71,7 @@ class KMedoidsFactory(Factory):
     self.cluster_centers = self.clf.cluster_centers_
   
   def opt_k(self, X, ks=range(2, 30), method='elbow', metric='distortion'):
-    clf = KMedoids()
+    clf = KMedoids(init='k-medoids++')
     return self.optimization_methods[method](X, ks, clf)
 
 class CMeansSKFactory(Factory):
@@ -82,6 +82,10 @@ class CMeansSKFactory(Factory):
       'elbow': fuzzy_elbow,
     }
 
+  def create(self, n_clusters=2):
+    super().create(n_clusters)
+    return self
+
   def fit(self, X):
     self.cluster_centers, u, _, _, _, _, _ = \
       cmeans(X.T, c=self.n_clusters, m=2, error=0.005, maxiter=1000)
@@ -91,42 +95,59 @@ class CMeansSKFactory(Factory):
     pass
     
 class CMeansFCFactory(Factory):
-  def __init__(self, n_clusters=2):
-    super().__init__(n_clusters)
+  def __init__(self):
+    super().__init__()
     self.name = 'Fuzzy C-Means'
     self.optimization_methods = {
       'elbow': fuzzy_elbow,
     }
+
+  def create(self, n_clusters=2):
+    super().create(n_clusters)
     self.clf = FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000)
+    return self
 
   def fit(self, X):
     u, self.cluster_centers = self.clf.fit(X)
     self.labels = np.argmax(u, axis=-1)    
   
+  def opt_k(self, X, ks=range(2, 30), method='elbow', metric='distortion'):
+    pass
+  
 class GKFactory(Factory):
-  def __init__(self, n_clusters=2):
-    super().__init__(n_clusters)
+  def __init__(self):
+    super().__init__()
     self.name = 'Gustafson-Kessel'
     self.optimization_methods = {
       'elbow': fuzzy_elbow,
     }
-    self.clf = \
-      FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000, method='Gustafson–Kessel')
   
+  def create(self, n_clusters=2):
+    super().create(n_clusters)
+    self.clf = FCluster(n_clusters, fuzzines=2, error=0.005, max_iter=1000, method='Gustafson–Kessel')
+    return self
+
   def fit(self, X):
     u, self.cluster_centers = self.clf.fit(X)
     self.labels = np.argmax(u, axis=-1)    
+  
+  def opt_k(self, X, ks=range(2, 30), method='elbow', metric='distortion'):
+    pass
 
 class RandFactory(Factory):
-  def __init__(self, n_clusters=2):
-    super().__init__(n_clusters)
-    self.name = 'Rand' + str(n_clusters)
+  def __init__(self):
+    super().__init__()
+    self.name = 'Rand'
+  
+  def create(self, n_clusters=2):
+    from littoral.system.dap_utils import generate_ed_coords
+    super().create(n_clusters)
+    self.name = self.name + str(n_clusters)
+    self.cluster_centers = generate_ed_coords(self.n_clusters)
+    return self
   
   def fit(self, X):
     from sklearn.metrics import pairwise_distances
-    from littoral.system.dap_utils import generate_ed_coords
-
-    self.cluster_centers = generate_ed_coords(self.n_clusters)
     dists = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
     self.labels = [np.argmin(dist) for dist in dists]
 
