@@ -6,7 +6,10 @@ from collections import Counter
 # Optimizating the number of clusters #
 #######################################
 
-def elbow(X, ks, model, metric='distortion'):
+# Function Signature:
+# function(X, ks, model, metric) -> int (k)
+
+def crisp_elbow(X, ks, model, metric='distortion'):   
     max_iters = 100
     best_ks = []
 
@@ -17,7 +20,12 @@ def elbow(X, ks, model, metric='distortion'):
         plt.clf()
     
     c = Counter(best_ks)
-    print(c)
     return c.most_common()[0]
+
+def fuzzy_elbow(X, ks, model, metric='distortion'):
+    if(model.type == None or not model.type == 'fuzzy'):
+        return -1
+
+    return 1
 
 #######################################
