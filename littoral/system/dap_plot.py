@@ -3,9 +3,9 @@ import numpy as np
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from sklearn.metrics import pairwise_distances
 import pandas as pd
+import seaborn as sns
 
-from littoral.system.dap_clustering import run_clustering
-from littoral.system.dap_vars import img_dir, data_dir, model_names, base_dir
+from littoral.system.dap_vars import img_dir, data_dir, base_dir
 from littoral.system.dap_utils import capex_opex_calc, write_coords, define_colors
 
 ######################
@@ -138,103 +138,59 @@ def plot_dists(ks, labels, mean_dist, max_dist):
     plt.savefig(f'{img_dir}/dists_models.png')
     plt.clf()
 
-"""
-def plot_metrics(ks):
-    import seaborn as sns
-
-    n_gws_kmeans, n_gws_kmedoids, n_gws_cmeans, n_gws_gk = ks['kmeans'], ks['kmedoids'], ks['cmeans'], ks['gk']
-
-    names=['sent', 'received', 'ul-pdr', 'rssi', 'snr', 'delay']
-    df_partial_kmeans = \
-        pd.read_csv(f'{data_dir}/kmeans/tracker_1_unconfirmed_buildings{n_gws_kmeans}gw.csv', names=names)
-
-    df_partial_kmedoids = \
-        pd.read_csv(f'{data_dir}/kmedoids/tracker_1_unconfirmed_buildings{n_gws_kmedoids}gw.csv', names=names)
-    
-    df_partial_cmeans = \
-        pd.read_csv(f'{data_dir}/cmeans/tracker_1_unconfirmed_buildings{n_gws_cmeans}gw.csv', names=names)
-    
-    df_partial_cmeans = \
-        pd.read_csv(f'{data_dir}/gk/tracker_1_unconfirmed_buildings{n_gws_gk}gw.csv', names=names)
-
-    labels = ['K-Means', 'K-Medoids', 'Fuzzy C-Means', 'Gustafson-Kessel']
-    metrics = ['ul-pdr', 'rssi', 'snr', 'delay']
-    text = 'K-Means, K-Medoids, Fuzzy C-Means and Gustafson-Kessel'
-    colors = ['0.2', '0.4', '0.6', '0.8']
-    hatches = ['//', '--', '++', 'x']
-
-    units = {
-        'ul-pdr': ' (%)',
-        'rssi': ' (dBm)',
-        'snr': ' (dB)',
-        'delay': ' (s)',
-    }
-    for metric in metrics:
-        datas = {
-            'K-Means': df_partial_kmeans[metric], 
-            'K-Medoids': df_partial_kmedoids[metric],
-            'Fuzzy C-Means': df_partial_cmeans[metric],
-            'Gustafson-Kessel': df_partial_cmeans[metric]
-        }
-        upper_metric = metric.upper()
-
-        plt.figure(figsize=(12, 8))
-        
-        ax = sns.boxplot(pd.DataFrame(datas), width=0.5, palette=colors)
-        for i, patch in enumerate(ax.patches):
-            patch.set_hatch(hatches[i])
-
-        plt.xlabel('Clustering Models', fontsize=14)
-        plt.ylabel(upper_metric + units[metric], fontsize=14)
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.title(f'{upper_metric} - {text}', fontsize=16)
-        plt.legend(labels=labels, title='Clustering Models', fontsize=10)
-        
-        plt.savefig(f'{img_dir}/{metric}_models.png')
-        plt.clf()
-    
-    init_energy = 10000 # in J
-    names = ['uid', 'remainder_energy']
-    n_reps = 30
-    kmeans_energy = \
-        [pd.read_csv(f'{data_dir}/kmeans/nRun_{i}_{n_gws_kmeans}gws_battery-level.txt', names=names).drop(0, axis=0) \
-            for i in range(1, n_reps+1)]
-    
-    kmedoids_energy = \
-        [pd.read_csv(f'{data_dir}/kmedoids/nRun_{i}_{n_gws_kmedoids}gws_battery-level.txt', names=names).drop(0, axis=0) \
-            for i in range(1, n_reps+1)]
-    
-    cmeans_energy = \
-        [pd.read_csv(f'{data_dir}/cmeans/nRun_{i}_{n_gws_cmeans}gws_battery-level.txt', names=names).drop(0, axis=0) \
-            for i in range(1, n_reps+1)]
-
-    gk_energy = \
-        [pd.read_csv(f'{data_dir}/gk/nRun_{i}_{n_gws_gk}gws_battery-level.txt', names=names).drop(0, axis=0) \
-            for i in range(1, n_reps+1)]
-
-    datas = {
-        'K-Means': [(init_energy - df['remainder_energy'].mean()) for df in kmeans_energy],
-        'K-Medoids': [(init_energy - df['remainder_energy'].mean()) for df in kmedoids_energy],
-        'C-Means': [(init_energy - df['remainder_energy'].mean()) for df in cmeans_energy],
-        'Gustafson-Kessel': [(init_energy - df['remainder_energy'].mean()) for df in gk_energy]
-    }
-
-    plt.figure(figsize=(12, 8))
-    
-    ax = sns.boxplot(pd.DataFrame(datas), width=0.5, palette=colors)
-    for i, patch in enumerate(ax.patches):
-        patch.set_hatch(hatches[i])
-
+def plot_metric(datas, labels, title_text, y_text, metric_name):
+    plt.figure(figsize=(12, 8))    
+    sns.boxplot(datas, width=0.5, palette=define_colors(len(labels)))
     plt.xlabel('Clustering Models', fontsize=14)
-    plt.ylabel('Consumed Energy (J)', fontsize=14)
+    plt.ylabel(y_text, fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(f'Consumed Energy - {text}', fontsize=16)
-    plt.legend(labels=labels, title='Clustering Models', fontsize=10)
-    
-    plt.savefig(f'{img_dir}/energy_models.png')
+    plt.title(title_text, fontsize=16)
+    plt.legend(labels=labels, title='Clustering Models', fontsize=10)   
+    plt.savefig(f'{img_dir}/{metric_name}_models.png')
     plt.clf()
-"""
+
+def plot_delay(delay_df, labels):
+    name = 'Delay'
+    title = f'{name} of the Clustering Models'
+    unit = 's'
+    y = f'{name} ({unit})'
+    plot_metric(delay_df, labels, title, y, name)
+
+def plot_energy(energy_df, labels):
+    name = 'Consumed Energy'
+    title = f'{name} by the Clustering Models'
+    unit = 'J'
+    y = f'{name} ({unit})'
+    plot_metric(energy_df, labels, title, y, name)
+
+def plot_rssi(rssi_df, labels):
+    name = 'RSSI'
+    title = f'{name} of the Clustering Models'
+    unit = 'dBm'
+    y = f'{name} ({unit})'
+    plot_metric(rssi_df, labels, title, y, name)
+
+def plot_snr(snr_df, labels):
+    name = 'SNR'
+    title = f'{name} of the Clustering Models'
+    unit = 'dB'
+    y = f'{name} ({unit})'
+    plot_metric(snr_df, labels, title, y, name)
+
+def plot_ulpdr(ulpdr_df, labels):
+    name = 'UL-PDR'
+    title = f'{name} of the Clustering Models'
+    unit = '%'
+    y = f'{name} ({unit})'
+    plot_metric(ulpdr_df, labels, title, y, name)
+
+plot_metrics = {
+    'delay': plot_delay,
+    'energy': plot_energy,
+    'rssi': plot_rssi,
+    'snr': plot_snr,
+    'ulpdr': plot_ulpdr,
+}
 
 ######################
