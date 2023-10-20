@@ -26,4 +26,5 @@ def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_
             f'{ns3_cmd} run "{script} {params01} {params02} --nRun={i}"'
         os.system(run_cmd)
     
-    return pd.read_csv(filename)
+    col_names = ['sent', 'received', 'ul-pdr', 'rssi', 'snr', 'delay']
+    return pd.read_csv(filename, names=col_names)
