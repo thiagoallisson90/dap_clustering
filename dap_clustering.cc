@@ -361,10 +361,10 @@ main (int argc, char *argv[])
    *  Handle buildings  *
    **********************/
 
-  double xLength = 300;
-  double deltaX = 300;
-  double yLength = 300;
-  double deltaY = 300;
+  double xLength = 280;
+  double deltaX = 280;
+  double yLength = 280;
+  double deltaY = 280;
   int gridWidth = 2 * radius / (xLength + deltaX);
   int gridHeight = 2 * radius / (yLength + deltaY);
   if (realisticChannelModel == 0 || realisticChannelModel == 1)
