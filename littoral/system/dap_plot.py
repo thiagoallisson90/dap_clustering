@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 
 from littoral.system.dap_vars import img_dir, data_dir, base_dir
-from littoral.system.dap_utils import capex_opex_calc, write_coords, define_colors
+from littoral.system.dap_utils import write_coords, define_colors
 
 ######################
 # Plotting Functions #
@@ -78,46 +78,40 @@ def plot_clusters(X, cntr, labels, cluster_points, model_name, folder_name):
 
     return df
 
-def plot_copex(ks, labels, capex_text='CapEx', opex_text='OpEx'):
-    capex_values, opex_values = [], []
-    for k in ks:
-        data = capex_opex_calc(k)
-        capex_values.append(data[0])
-        opex_values.append(data[1])
-            
-    colors = define_colors(len(ks))
+def plot_capex_opex(capex, opex, labels):           
+    colors = define_colors(len(capex))
 
     plt.figure(figsize=(12, 8))
-    plt.bar(labels, capex_values, color=colors)
+    plt.bar(labels, capex, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('CapEx (K€)', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(capex_text, fontsize=16)
+    plt.title('CapEx of the Clustering Algorithms', fontsize=16)
 
-    for i, value in enumerate(capex_values):
+    for i, value in enumerate(capex):
         plt.text(i, value, f'{value:.2f}', ha='center', va='bottom', fontsize=12)
 
     plt.savefig(f'{img_dir}/capex_models.png')
     plt.clf()
 
     plt.figure(figsize=(12, 8))
-    plt.bar(labels, opex_values, color=colors)
+    plt.bar(labels, opex, color=colors)
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel('OpEx (K€)', fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(opex_text, fontsize=16)
+    plt.title('OpEx of the Clustering Algorithms', fontsize=16)
     
-    for i, value in enumerate(opex_values):
+    for i, value in enumerate(opex):
         plt.text(i, value, f'{value:.2f}', ha='center', va='bottom', fontsize=12)
     
     plt.savefig(f'{img_dir}/opex_models.png')
     plt.clf()
 
-def plot_dists(ks, labels, mean_dist, max_dist):
+def plot_dists(mean_dist, max_dist, labels):
     width = 0.35
-    x = np.arange(len(ks))
+    x = np.arange(len(mean_dist))
 
     plt.figure(figsize=(12, 8))
     plt.bar(x, mean_dist, width, label='Mean Distance', color='blue', hatch='++')
@@ -150,47 +144,49 @@ def plot_metric(datas, labels, title_text, y_text, metric_name):
     plt.savefig(f'{img_dir}/{metric_name}_models.png')
     plt.clf()
 
+metric_names = ['delay', 'energy', 'rssi', 'snr', 'ul-pdr']
+
 def plot_delay(delay_df, labels):
     name = 'Delay'
-    title = f'{name} of the Clustering Models'
+    title = f'{name} of the Clustering Algorithms'
     unit = 's'
     y = f'{name} ({unit})'
     plot_metric(delay_df, labels, title, y, name)
 
 def plot_energy(energy_df, labels):
     name = 'Consumed Energy'
-    title = f'{name} by the Clustering Models'
+    title = f'{name} by the Clustering Algorithms'
     unit = 'J'
     y = f'{name} ({unit})'
     plot_metric(energy_df, labels, title, y, name)
 
 def plot_rssi(rssi_df, labels):
     name = 'RSSI'
-    title = f'{name} of the Clustering Models'
+    title = f'{name} of the Clustering Algorithms'
     unit = 'dBm'
     y = f'{name} ({unit})'
     plot_metric(rssi_df, labels, title, y, name)
 
 def plot_snr(snr_df, labels):
     name = 'SNR'
-    title = f'{name} of the Clustering Models'
+    title = f'{name} of the Clustering Algorithms'
     unit = 'dB'
     y = f'{name} ({unit})'
     plot_metric(snr_df, labels, title, y, name)
 
 def plot_ulpdr(ulpdr_df, labels):
     name = 'UL-PDR'
-    title = f'{name} of the Clustering Models'
+    title = f'{name} of the Clustering Algorithms'
     unit = '%'
     y = f'{name} ({unit})'
     plot_metric(ulpdr_df, labels, title, y, name)
 
 plot_metrics = {
-    'delay': plot_delay,
-    'energy': plot_energy,
-    'rssi': plot_rssi,
-    'snr': plot_snr,
-    'ulpdr': plot_ulpdr,
+    metric_names[0]: plot_delay,
+    metric_names[1]: plot_energy,
+    metric_names[2]: plot_rssi,
+    metric_names[3]: plot_snr,
+    metric_names[4]: plot_ulpdr,
 }
 
 ######################
