@@ -25,7 +25,7 @@ def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_o
              gw_pos_file=gw_pos_file, radius=10000, load=1):
     script='scratch/dap_clustering.cc'
     n_gw = len(centroids)
-    n_simulatons = 1
+    n_simulatons = 30
     
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
@@ -48,9 +48,8 @@ def test_coverage():
     df_ok = None
     radius_ok = None
 
-    for radius in [2709.071, 2709.072, 2709.073, 2709.074]:
-
-        simulate([[radius, radius]], [[0, 0]], model='tests', radius=radius)
+    for radius in [2100]:
+        simulate([[radius, radius]], [[0, 0]], model='tests', radius=radius, load=1)
 
         df = pd.read_csv(f'{data_dir}/tests/tracker_1_unconfirmed_buildings1gw.csv', 
                         names=['sent', 'rec', 'pdr', 'rssi', 'snr', 'delay', 'radius'])
@@ -60,9 +59,6 @@ def test_coverage():
         else:
             radius_ok = radius
             df_ok = df
-    
-        os.system('clear')
-    os.system('clear')
 
     key1 = str(radius_ok)
 
