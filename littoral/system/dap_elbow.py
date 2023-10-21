@@ -61,7 +61,7 @@ class GKElbow(Elbow):
         from littoral.algorithms.dap_gk import GK
 
         found_knees = []
-        n_iters = 30
+        n_iters = 100
 
         for _ in range(n_iters):
             distortion_scores = []

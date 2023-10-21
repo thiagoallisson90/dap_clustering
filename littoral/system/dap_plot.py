@@ -137,7 +137,7 @@ def plot_metric(datas, labels, title_text, y_text, metric_name):
     sns.boxplot(datas, width=0.5, palette=define_colors(len(labels)))
     plt.xlabel('Clustering Models', fontsize=14)
     plt.ylabel(y_text, fontsize=14)
-    plt.xticks(fontsize=12)
+    plt.xticks(range(len(labels)), labels, fontsize=12)
     plt.yticks(fontsize=12)
     plt.title(title_text, fontsize=16)
     plt.legend(labels=labels, title='Clustering Models', fontsize=10)   
