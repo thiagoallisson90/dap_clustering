@@ -1,6 +1,5 @@
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 import pandas as pd
 
 from littoral.system.dap_vars import *
@@ -42,44 +41,6 @@ def simulate(coords, centroids, model, ed_pos_file=ed_pos_file, ed_out_file=ed_o
             f'{ns3_cmd} run "{script} {params01} {params02} --nRun={i}"'
         os.system(run_cmd)
 
-def test_coverage():
-    import seaborn as sns
-
-    df_ok = None
-    radius_ok = None
-
-    for radius in [2100]:
-        simulate([[radius, radius]], [[0, 0]], model='tests', radius=radius, load=1)
-
-        df = pd.read_csv(f'{data_dir}/tests/tracker_1_unconfirmed_buildings1gw.csv', 
-                        names=['sent', 'rec', 'pdr', 'rssi', 'snr', 'delay', 'radius'])
-        row = df.loc[df['rec'] == 0.0]
-        if(len(row) > 0):
-            break
-        else:
-            radius_ok = radius
-            df_ok = df
-
-    key1 = str(radius_ok)
-
-    print('Maximium radius = ', radius_ok)
-    print(f'Minimum RSSI = {df_ok["rssi"].min()} (dBm)')
-
-    plt.figure(figsize=(12, 8))
-    
-    ax = sns.boxplot(pd.DataFrame({key1: df_ok['rssi']}))
-    ax.set_ylim(-130.0, -143.0)
-
-    plt.xlabel(f'Coverage Radius (m)', fontsize=14)
-    plt.ylabel('RSSI (dBm)', fontsize=14)
-
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    plt.title(f'Maximium Coverage Radius Analysis', fontsize=16)
-    plt.savefig(f'{img_dir}/tests/max_radius.png')
-    plt.clf()
-
 def capex_opex_calc(n_daps):
     CBs, Cins, Cset, Txinst = 1, 2, 0.1, 4
 
@@ -102,5 +63,21 @@ def define_colors(k, seed=42):
         [(np.random.random(), np.random.random(), np.random.random()) for _ in range(k)]
     np.random.seed(None)
     return colors
+
+def compute_consumed_energy(ks, folders, data_dir=data_dir, n_reps=30):
+    initial_energy = 10000 # in J
+    col_names = ['uid', 'remainder_energy']
+
+    energy_values = [0 for _ in ks]
+    for j in range(len(ks)):
+        k = ks[j]
+        folder = folders[j]
+        dfs = \
+            [pd.read_csv(f'{data_dir}/{folder}/nRun_{i}_{k}gws_battery-level.txt', names=col_names).drop(0, axis=0) \
+                for i in range(1, n_reps+1)]
+        
+        energy_values[j] = [initial_energy - df['remainder_energy'].mean() for df in dfs]
+
+    return energy_values
 
 #####################
