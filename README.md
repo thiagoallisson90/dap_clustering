@@ -18,3 +18,16 @@ chmod +x dap_config.py
 #!/usr/bin/python
 ```
 4. Make test script and run this
+
+## ToDo
+
+- [ ] Add elbow method based on the silhouette index.
+- [ ] Add elbow method based on the calinski harabasz index.
+- [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
+- [ ] Create method in the lorawan-mac-helper file to set up the EDs SF based on the conections established.
+- [ ] Create K-Means applying RSSI values as inputs.
+- [ ] Create K-Medoids applying RSSI values as inputs.
+- [ ] Create Fuzzy C-Means applying RSSI values as inputs.
+- [ ] Create Gustafson-Kessel applying RSSI values as inputs.
+- [ ] Create clustering algorithm based on the NSGA-II, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
+- [ ] Create clustering algorithm based on the MO-PSO, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
