@@ -21,15 +21,15 @@ chmod +x dap_config.py
 
 ## ToDo
 
-- [ ] Add elbow method based on the silhouette index.
-- [ ] Add elbow method based on the calinski harabasz index.
-- [ ] Add WCSS analysis for the clusters.
-- [ ] Add homogeneity analysis for the clusters.
-- [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
-- [ ] Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.
-- [ ] Create K-Means applying RSSI values as inputs.
-- [ ] Create K-Medoids applying RSSI values as inputs.
-- [ ] Create Fuzzy C-Means applying RSSI values as inputs.
-- [ ] Create Gustafson-Kessel applying RSSI values as inputs.
-- [ ] Create clustering algorithm based on the NSGA-II, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
-- [ ] Create clustering algorithm based on the MO-PSO, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
+1. [ ] Add elbow method based on the silhouette index.
+2. [ ] Add elbow method based on the calinski harabasz index.
+3. [ ] Add WCSS analysis for the clusters.
+4. [ ] Add homogeneity analysis for the clusters.
+5. [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
+6. [ ] Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.
+7. [ ] Create K-Means applying RSSI values as inputs.
+8. [ ] Create K-Medoids applying RSSI values as inputs.
+9. [ ] Create Fuzzy C-Means applying RSSI values as inputs.
+10. [ ] Create Gustafson-Kessel applying RSSI values as inputs.
+11. [ ] Create clustering algorithm based on the NSGA-II, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
+12. [ ] Create clustering algorithm based on the MO-PSO, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
