@@ -19,7 +19,7 @@ chmod +x dap_config.py
 ```
 4. Make test script and run this
 
-## ToDo
+## ToDos
 
 1. [ ] Add elbow method based on the silhouette index.
 2. [ ] Add elbow method based on the calinski harabasz index.
