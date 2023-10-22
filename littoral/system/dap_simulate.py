@@ -13,7 +13,7 @@ def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_
 
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
-    filename = f'{data_dir}/{folder}/tracker_{load}_unconfirmed_buildings{n_gw}gw.csv'
+    filename = f'{data_dir}/{folder}/tracker_unconfirmed_buildings{n_gw}gw.csv'
     with open(filename, mode="w") as file:
         file.write('')
         file.close()

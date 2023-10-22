@@ -59,7 +59,7 @@ class CMeansElbow(Elbow):
 class GKElbow(Elbow):
     def execute(self, X, ks):
         from littoral.algorithms.dap_gk import GK
-
+        
         found_knees = []
         n_iters = 100
 
