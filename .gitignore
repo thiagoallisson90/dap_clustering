@@ -2,6 +2,10 @@ __pycache__
 *.csv
 *.png
 *.txt
+
 data
 imgs
+
 tests.py
+ed_pos_file.csv
+gw_pos_file.csv
