@@ -78,7 +78,7 @@ class GKElbow(Elbow):
                             direction='decreasing', 
                             S=1
                             )
-            print(kl.knee)
+            
             found_knees.append(kl.knee) 
 
         return Counter(found_knees).most_common()[0]
