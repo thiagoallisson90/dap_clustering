@@ -14,11 +14,11 @@ if __name__ == '__main__':
   coords = generate_ed_coords()
 
   ks_range = range(10, 30)
-  ks = [16, 18, 16]
+  ks = []
 
   print('#########################################################################################')  
   print('Computing the optimal values to k')
-  # 16, 18, 16, 19
+  ks = [16, 18, 16, 10] # 16, 18, 16, 10
   """best_k = CrispElbow().execute(coords, ks=ks_range, model=KMeans(n_init='auto', init='k-means++'))
   print(f'Best k to K-Means: {best_k}')
   ks.append(best_k[0])
@@ -29,11 +29,12 @@ if __name__ == '__main__':
 
   best_k = CMeansElbow().execute(coords, ks=ks_range)
   print(f'Best k to Fuzzy C-Means: {best_k}')
-  ks.append(best_k[0])"""
+  ks.append(best_k[0])
 
   best_k = GKElbow().execute(coords, ks=ks_range)
   print(f'Best k to Gustafson-Kessel: {best_k}')
   ks.append(best_k[0])
+  """
   
   ks.append(16) # Rand16
   ks.append(25) # Rand25

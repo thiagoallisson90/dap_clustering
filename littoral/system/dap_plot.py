@@ -50,6 +50,10 @@ def plot_clusters(X, cntr, labels, cluster_points, model_name, folder_name):
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.title(f'Number of SMs in each Cluster {model_name}', fontsize=16)
+
+    for i, count in enumerate(sorted_cluster_counts):
+        plt.text(count + 1, i, str(count), va='center', fontsize=12)
+
     plt.savefig(f'{img_dir}/{folder_name}/{k}gw_chart.png', bbox_inches='tight')
     plt.clf()
 
