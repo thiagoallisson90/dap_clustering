@@ -24,7 +24,7 @@ chmod +x dap_config.py
 - [ ] Add elbow method based on the silhouette index.
 - [ ] Add elbow method based on the calinski harabasz index.
 - [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
-- [ ] Create method in the lorawan-mac-helper file to set up the EDs SF based on the conections established.
+- [ ] Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.
 - [ ] Create K-Means applying RSSI values as inputs.
 - [ ] Create K-Medoids applying RSSI values as inputs.
 - [ ] Create Fuzzy C-Means applying RSSI values as inputs.
