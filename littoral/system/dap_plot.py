@@ -77,6 +77,8 @@ def plot_clusters(X, cntr, labels, cluster_points, model_name, folder_name):
     }
 
     write_coords(cntr, f'data/{folder_name}/{k}gw_centroids.csv')
+    df = pd.DataFrame(labels)
+    df.to_csv(f'{data_dir}/{folder_name}/{k}gw_labels.csv', index=False, header=False)
     df = pd.DataFrame(data)
     df.to_csv(f'{data_dir}/{folder_name}/{k}gw_distances.csv', index=False)
 
