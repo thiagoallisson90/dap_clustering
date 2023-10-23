@@ -80,4 +80,25 @@ def compute_consumed_energy(ks, folders, data_dir=data_dir, n_reps=30):
 
     return energy_values
 
+def normal_test(data, verbose=False):
+    alpha = 0.05
+    p = 0.0
+    size = len(data)
+
+    if(size > 4 and size <= 30):
+        from scipy.stats import shapiro        
+        _, p = shapiro(data)
+    elif(size > 30 and size <= 50):
+        from statsmodels.stats.diagnostic import lilliefors
+        _, p = lilliefors(data, dist='norm')
+
+    if(p >= alpha):
+        if(verbose):
+            print(f'Similar datas to a normal distribution with p-value = {p}')
+        return True, p
+    
+    if(verbose):
+        print(f'Not similar datas to a normal distribution, p-value = {p}')
+    return False, p
+
 #####################
