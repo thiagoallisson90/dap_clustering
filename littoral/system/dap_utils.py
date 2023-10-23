@@ -108,4 +108,38 @@ def normal_test(data):
     
     return False, p, median_indexes
 
+def full_normal_test(k, folder):
+    file = f'{data_dir}/{folder}/tracker_unconfirmed_buildings{k}gw.csv'
+    names=['Sent', 'Received', 'UL-PDR', 'RSSI', 'SNR', 'Delay']
+    df = pd.read_csv(file, names=names)
+    ps = {}
+    index_df = {}
+
+    for name in names:
+        if(name not in ['Sent', 'Received']):
+            data = df[name]
+            result, p, median_indexes = normal_test(data)
+            ps[name.lower()] = [p]
+            if(result):
+                if(len(median_indexes) == 2):
+                    first, second = median_indexes
+                    index_df[name.lower()] = (first+1, second+1)
+                elif(len(median_indexes) == 1):
+                    index_df[name.lower()] = median_indexes
+
+    energy = compute_consumed_energy(ks=[k], folders=[folder])
+    energy_serie = pd.Series(energy[0])
+    result, p, median_indexes = normal_test(energy_serie)
+    ps['energy'] = p
+
+    if(result):
+        if(len(median_indexes) == 2):
+            first, second = median_indexes
+            index_df['energy'] = (first+1, second+1)
+        elif(len(median_indexes) == 1):
+            index_df['energy'] = median_indexes
+
+    pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/p_values.csv', index=False)
+    pd.DataFrame(index_df).to_csv(f'{data_dir}/{folder}/median_indexes.csv', index=False)
+
 #####################
