@@ -1,7 +1,9 @@
 import numpy as np
+from sklearn.metrics import pairwise_distances
 from sklearn.cluster import KMeans
 from sklearn_extra.cluster import KMedoids
 from skfuzzy.cluster import cmeans
+
 from littoral.algorithms.dap_gk import GK
 
 ##############################
@@ -11,6 +13,8 @@ from littoral.algorithms.dap_gk import GK
 class Factory:
   def __init__(self, n_clusters):
     self.n_clusters = n_clusters
+    self.cluster_centers = None
+    self.labels = None
     self.clf = None
 
   def fit(self, X):
@@ -22,6 +26,14 @@ class Factory:
         clusters[label].append(X[i])
     
     return clusters
+
+  def calc_wcss(self, X):
+    distances = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
+    self.wcss = 0
+
+    for i in range(self.n_clusters):
+      cluster_distances = distances[self.labels == i, i]
+      self.wcss = self.wcss + np.sum(cluster_distances ** 2)
    
 class KMeansFactory(Factory):
   def __init__(self, n_clusters=2):
@@ -33,6 +45,7 @@ class KMeansFactory(Factory):
     self.clf.fit(X)
     self.labels = self.clf.labels_
     self.cluster_centers = self.clf.cluster_centers_
+    self.wcss = self.clf.inertia_
     return self
   
 class KMedoidsFactory(Factory):
@@ -45,6 +58,7 @@ class KMedoidsFactory(Factory):
     self.clf.fit(X)
     self.labels = self.clf.labels_
     self.cluster_centers = self.clf.cluster_centers_
+    self.wcss = self.clf.inertia_
     return self
 
 class CMeansFactory(Factory):
@@ -56,6 +70,7 @@ class CMeansFactory(Factory):
     self.cluster_centers, u, _, _, _, _, _ = \
       cmeans(X.T, c=self.n_clusters, m=2, error=0.005, maxiter=1000)
     self.labels = np.argmax(u, axis=0)
+    self.calc_wcss(X)
     return self
       
 class GKFactory(Factory):
@@ -68,6 +83,7 @@ class GKFactory(Factory):
     self.clf.fit(X)
     self.labels = np.argmax(self.clf.u, axis=0)
     self.cluster_centers = self.clf.centers
+    self.calc_wcss(X)
     return self
 
 class RandFactory(Factory):
@@ -82,6 +98,11 @@ class RandFactory(Factory):
     self.cluster_centers = generate_ed_coords(self.n_clusters)
     dists = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
     self.labels = [np.argmin(dist) for dist in dists]
+    
+    self.wcss = 0
+    for dist in dists:
+      self.wcss = self.wcss + np.sum(np.min(dist) ** 2)
+
     return self
 
 ##############################

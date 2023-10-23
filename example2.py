@@ -4,7 +4,7 @@ from sklearn_extra.cluster import KMedoids
 from littoral.system.dap_utils import generate_ed_coords, capex_opex_calc
 from littoral.system.dap_factory import KMeansFactory, KMedoidsFactory, CMeansFactory
 from littoral.system.dap_factory import GKFactory, RandFactory
-from littoral.system.dap_plot import plot_clusters, plot_capex_opex, plot_dists
+from littoral.system.dap_plot import plot_clusters, plot_capex_opex, plot_dists, plot_wcss
 from littoral.system.dap_plot import metric_names, plot_metrics
 from littoral.system.dap_simulate import simulate
 from littoral.system.dap_elbow import CrispElbow, CMeansElbow, GKElbow
@@ -13,14 +13,14 @@ from littoral.system.dap_utils import compute_consumed_energy
 if __name__ == '__main__':
   coords = generate_ed_coords()
 
-  ks_range = range(15, 30)
+  #ks_range = range(15, 30)
   ks = []
   metric = 'calinski_harabasz'
 
   print('#########################################################################################')  
   print('Computing the optimal values to k')
-  #ks = [16, 18, 16] # 16, 18, 16, 10
-  best_k = CrispElbow().execute(coords, ks=ks_range, model=KMeans(n_init='auto', init='k-means++'), metric=metric)
+  ks = [16, 18, 16, 15] # 16, 18, 16, 15
+  """best_k = CrispElbow().execute(coords, ks=ks_range, model=KMeans(n_init='auto', init='k-means++'), metric=metric)
   print(f'Best k to K-Means: {best_k}')
   ks.append(best_k[0])
   
@@ -34,19 +34,20 @@ if __name__ == '__main__':
   
   best_k = GKElbow().execute(coords, ks=ks_range, metric=metric)
   print(f'Best k to Gustafson-Kessel: {best_k}')
-  ks.append(best_k[0])
+  ks.append(best_k[0])"""
 
   ks.append(16) # Rand16
   ks.append(25) # Rand25
   
   print('#########################################################################################')  
-  print('Plotting CapEx, OpEx and Intra-cluster distances')
+  print('Plotting CapEx, OpEx, Intra-cluster Distances and WCSS')
 
   clfs = [KMeansFactory(ks[0]), KMedoidsFactory(ks[1]), CMeansFactory(ks[2]), GKFactory(ks[3]), 
           RandFactory(ks[4]), RandFactory(ks[5])]
   folders = ['kmeans', 'kmedoids', 'cmeans', 'gk', 'rand', 'rand']
   names, mean_dist, max_dist = [], [], []
   capex_values, opex_values = [], []
+  wcss =  []
 
   for i in range(len(clfs)):
     clfs[i].fit(coords)
@@ -61,9 +62,11 @@ if __name__ == '__main__':
     capex, opex = capex_opex_calc(k)
     capex_values.append(capex)
     opex_values.append(opex)
+    wcss.append(clfs[i].wcss)
 
   plot_capex_opex(capex_values, opex_values, labels=names)
   plot_dists(mean_dist=mean_dist, max_dist=max_dist, labels=names)
+  plot_wcss(wcss, labels=names)
   
   print('#########################################################################################')  
   print('Simulating and plotting metrics: Delay, Energy, RSSI, SNR and UL-PDR')

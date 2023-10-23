@@ -138,6 +138,28 @@ def plot_dists(mean_dist, max_dist, labels):
     plt.savefig(f'{img_dir}/dists_models.png')
     plt.clf()
 
+def plot_wcss(wcss, labels):
+    colors = define_colors(len(wcss))
+
+    plt.figure(figsize=(12, 8))
+    bars = plt.bar(labels, wcss, color=colors)
+    plt.xlabel('Clustering Models', fontsize=14)
+    plt.ylabel('WCSS', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title('WCSS of the Clustering Algorithms', fontsize=16)
+    
+    for i, value in enumerate(wcss):
+        plt.text(i, value, f'{value:.2f}', ha='center', va='bottom', fontsize=12)
+    
+    for i, bar in enumerate(bars):
+        bar.set_label(labels[i])
+    
+    plt.legend(fontsize=12)
+
+    plt.savefig(f'{img_dir}/wcss_models.png')
+    plt.clf()
+
 def plot_metric(datas, labels, title_text, y_text, metric_name):
     plt.figure(figsize=(12, 8))    
     sns.boxplot(datas, width=0.5, palette=define_colors(len(labels)))
