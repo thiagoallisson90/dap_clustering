@@ -80,25 +80,32 @@ def compute_consumed_energy(ks, folders, data_dir=data_dir, n_reps=30):
 
     return energy_values
 
-def normal_test(data, verbose=False):
+def normal_test(data):
     alpha = 0.05
     p = 0.0
     size = len(data)
+    indexes = data.sort_values().index
 
     if(size > 4 and size <= 30):
         from scipy.stats import shapiro        
         _, p = shapiro(data)
     elif(size > 30 and size <= 50):
         from statsmodels.stats.diagnostic import lilliefors
-        _, p = lilliefors(data, dist='norm')
+        _, p = lilliefors(data, dist='norm', pvalmethod='approx')
 
-    if(p >= alpha):
-        if(verbose):
-            print(f'Similar datas to a normal distribution with p-value = {p}')
-        return True, p
+    aux = 0
+    median_indexes = []
+    if(size % 2 == 0):
+        aux = int(size / 2.0)
+        median_indexes.append(indexes[int(aux)-1])
+        median_indexes.append(indexes[int(aux)])
+    else:
+        aux = int((size+1)/2.0)
+        median_indexes.append(indexes[aux])
     
-    if(verbose):
-        print(f'Not similar datas to a normal distribution, p-value = {p}')
-    return False, p
+    if(p >= alpha):
+        return True, p, median_indexes
+    
+    return False, p, median_indexes
 
 #####################
