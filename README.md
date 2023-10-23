@@ -23,6 +23,7 @@ chmod +x dap_config.py
 
 1. [X] ~~Add elbow method based on the silhouette score (silhouette score almost always computes k equals to 10 or 15)~~.
 2. [X] ~~Add elbow method based on the calinski harabasz score (calinski score almost always computes k equals to 10 or 15)~~.
+3. [X] ~~Add shapiro-wilk and lilliefors normal test.~~
 3. [ ] Add WCSS analysis for the clusters.
 4. [ ] Add homogeneity analysis for the clusters.
 5. [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
