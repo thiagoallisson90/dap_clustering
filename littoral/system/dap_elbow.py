@@ -55,13 +55,11 @@ class CMeansElbow(Elbow):
             for k in k_values:
                 _, u, _, _, _, _, _ = cmeans(X.T, c=k, m=2, error=0.005, maxiter=1000)
                 labels = np.argmax(u, axis=0)
-                #distortion_scores.append(distortion_score(X, labels))
                 distortion_scores.append(method[metric](X, labels))
                 
             kl = KneeLocator(x=k_values, 
                             y=distortion_scores, 
                             curve='convex', 
-                            #direction='decreasing', 
                             direction=direction[metric],
                             S=1
                             )
@@ -84,13 +82,11 @@ class GKElbow(Elbow):
                 clf = GK(k, m=2)
                 clf.fit(X)
                 labels = np.argmax(clf.u, axis=0)
-                #distortion_scores.append(distortion_score(X, labels))
                 distortion_score.append(method[metric](X, labels))
                 
             kl = KneeLocator(x=k_values, 
                             y=distortion_scores, 
                             curve='convex', 
-                            #direction='decreasing', 
                             direction=direction[metric],
                             S=1
                             )
