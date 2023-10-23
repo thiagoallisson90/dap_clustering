@@ -45,7 +45,7 @@ class KMeansFactory(Factory):
     self.clf.fit(X)
     self.labels = self.clf.labels_
     self.cluster_centers = self.clf.cluster_centers_
-    self.wcss = self.clf.inertia_
+    self.calc_wcss(X)
     return self
   
 class KMedoidsFactory(Factory):
@@ -58,7 +58,7 @@ class KMedoidsFactory(Factory):
     self.clf.fit(X)
     self.labels = self.clf.labels_
     self.cluster_centers = self.clf.cluster_centers_
-    self.wcss = self.clf.inertia_
+    self.calc_wcss(X)
     return self
 
 class CMeansFactory(Factory):
