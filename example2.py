@@ -8,7 +8,7 @@ from littoral.system.dap_plot import plot_clusters, plot_capex_opex, plot_dists,
 from littoral.system.dap_plot import metric_names, plot_metrics
 from littoral.system.dap_simulate import simulate
 from littoral.system.dap_elbow import CrispElbow, CMeansElbow, GKElbow
-from littoral.system.dap_utils import compute_consumed_energy
+from littoral.system.dap_utils import compute_consumed_energy, full_normal_test
 
 if __name__ == '__main__':
   coords = generate_ed_coords()
@@ -55,8 +55,8 @@ if __name__ == '__main__':
     names.append(name)
     df = plot_clusters(coords, clfs[i].cluster_centers, clfs[i].labels, 
                   clfs[i].cluster_points(coords), name, folders[i])
-    mean_dist.append(df['mean_dist'].mean())    
-    max_dist.append(df['max_dist'].mean())
+    mean_dist.append(df['mean_dist'].max())    
+    max_dist.append(df['max_dist'].max())
 
     k = len(clfs[i].cluster_centers)
     capex, opex = capex_opex_calc(k)
@@ -74,6 +74,9 @@ if __name__ == '__main__':
   load = 1
   df_sims = \
     [simulate(coords, clfs[i].cluster_centers, folders[i], load=load) for i in range(len(clfs))]  
+
+  for i in range(len(ks)):
+    full_normal_test(ks[i], folder=folders[i])
 
   for metric in metric_names:
     if(metric != 'energy'):
