@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import pairwise_distances
+from scipy.spatial.distance import euclidean
 from sklearn.cluster import KMeans
 from sklearn_extra.cluster import KMedoids
 from skfuzzy.cluster import cmeans
@@ -28,12 +29,12 @@ class Factory:
     return clusters
 
   def calc_wcss(self, X):
-    distances = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
+    clusters = self.cluster_points(X)
     self.wcss = 0
 
-    for i in range(self.n_clusters):
-      cluster_distances = distances[self.labels == i, i]
-      self.wcss = self.wcss + np.sum(cluster_distances ** 2)
+    for i, points in enumerate(clusters):
+      cluster_distances = [euclidean(self.cluster_centers[i], point) for point in points]
+      self.wcss = self.wcss + np.sum([dist ** 2 for dist in cluster_distances])
    
 class KMeansFactory(Factory):
   def __init__(self, n_clusters=2):
@@ -93,7 +94,6 @@ class RandFactory(Factory):
   
   def fit(self, X):
     from littoral.system.dap_utils import generate_ed_coords
-    from sklearn.metrics import pairwise_distances
 
     self.cluster_centers = generate_ed_coords(self.n_clusters)
     dists = pairwise_distances(X, self.cluster_centers, n_jobs=-1)
