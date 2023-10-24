@@ -93,5 +93,5 @@ def full_normal_test(k, folder):
     _, p = normal_test(energy_serie)
     ps['energy'] = p
 
-    pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/p_values.csv', index=False)
+    pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/p_values_{k}gws.csv', index=False)
 #####################
