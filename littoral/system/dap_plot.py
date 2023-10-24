@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-from sklearn.metrics import pairwise_distances
+from scipy.spatial.distance import euclidean
 import pandas as pd
 import seaborn as sns
 
@@ -57,9 +57,11 @@ def plot_clusters(X, cntr, labels, cluster_points, model_name, folder_name):
     plt.savefig(f'{img_dir}/{folder_name}/{k}gw_chart.png', bbox_inches='tight')
     plt.clf()
 
+    plt.close('all')
+
     intra_cluster_distances = {}
     for label, points in enumerate(cluster_points):
-        distances = pairwise_distances(points, metric='euclidean', n_jobs=-1)
+        distances = [euclidean(cntr[label], point) for point in points]
         intra_cluster_distances[label] = distances
 
     average_intra_cluster_distances = {}
@@ -114,6 +116,8 @@ def plot_capex_opex(capex, opex, labels):
     
     plt.savefig(f'{img_dir}/opex_models.png')
     plt.clf()
+    
+    plt.close('all')
 
 def plot_dists(mean_dist, max_dist, labels):
     width = 0.35
@@ -137,6 +141,7 @@ def plot_dists(mean_dist, max_dist, labels):
 
     plt.savefig(f'{img_dir}/dists_models.png')
     plt.clf()
+    plt.close('all')
 
 def plot_wcss(wcss, labels):
     colors = define_colors(len(wcss))
@@ -159,6 +164,7 @@ def plot_wcss(wcss, labels):
 
     plt.savefig(f'{img_dir}/wcss_models.png')
     plt.clf()
+    plt.close('all')
 
 def plot_metric(datas, labels, title_text, y_text, metric_name):
     plt.figure(figsize=(12, 8))    
@@ -171,6 +177,7 @@ def plot_metric(datas, labels, title_text, y_text, metric_name):
     plt.legend(labels=labels, title='Clustering Models', fontsize=10)   
     plt.savefig(f'{img_dir}/{metric_name}_models.png')
     plt.clf()
+    plt.close('all')
 
 metric_names = ['delay', 'energy', 'rssi', 'snr', 'ul-pdr']
 
