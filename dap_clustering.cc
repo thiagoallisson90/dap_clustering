@@ -89,9 +89,8 @@ Format(double v, int digits=4) {
 void 
 WriteInLog (std::string output)
 {
-  std::string fileName = baseDir + "data/" + clusteringModel + "/" + "tracker_" + Format(lambda, 1) + "_" 
-                        + trafficStrs[traffic] + "_" + models[realisticChannelModel] + std::to_string(nGateways) 
-                        + "gw.csv";
+  std::string fileName = baseDir + "data/" + clusteringModel + "/" + "tracker_" + trafficStrs[traffic] + "_" 
+                          + models[realisticChannelModel] + std::to_string(nGateways) + "gw.csv";
   std::ofstream ofs;
   ofs.open (fileName, std::ofstream::out | std::ofstream::app);
   if (ofs.is_open ())
@@ -201,13 +200,11 @@ main (int argc, char *argv[])
     RngSeedManager::SetRun(nRun);    
 
   simulationTime = nDevices;
-  double realLambda = 1.0 / (lambda * 60);
-
-  appPeriodSeconds = simulationTime / realLambda;
+  appPeriodSeconds = simulationTime / lambda;
   //simulationTime = simulationTime / lambda * nSimulation;
-  simulationTime = simulationTime / realLambda;
+  simulationTime = simulationTime / lambda;
 
-  std::cout << "Lambda in min =" << lambda << "," << "Simulation Time=" << simulationTime << "," << "App Period=" 
+  std::cout << "Lambda=" << lambda << "," << "Simulation Time=" << simulationTime << "," << "App Period=" 
             << appPeriodSeconds << "," << "Number of Gateways=" << nGateways << std::endl;
 
   // Set up logging
@@ -237,7 +234,7 @@ main (int argc, char *argv[])
   Ptr<OkumuraHataPropagationLossModel> loss = CreateObject<OkumuraHataPropagationLossModel> ();
   loss->SetAttribute ("Frequency", DoubleValue (868000000));
   loss->SetAttribute ("Environment", EnumValue (UrbanEnvironment));
-  loss->SetAttribute ("CitySize", EnumValue (MediumCity));
+  loss->SetAttribute ("CitySize", EnumValue (LargeCity));
 
   if (realisticChannelModel == 1 || realisticChannelModel == 2)
     {
@@ -361,10 +358,10 @@ main (int argc, char *argv[])
    *  Handle buildings  *
    **********************/
 
-  double xLength = 280;
-  double deltaX = 280;
-  double yLength = 280;
-  double deltaY = 280;
+  double xLength = 200;
+  double deltaX = 200;
+  double yLength = 200;
+  double deltaY = 200;
   int gridWidth = 2 * radius / (xLength + deltaX);
   int gridHeight = 2 * radius / (yLength + deltaY);
   if (realisticChannelModel == 0 || realisticChannelModel == 1)
@@ -389,7 +386,7 @@ main (int argc, char *argv[])
       "MinY", DoubleValue (-gridHeight * (yLength + deltaY) / 2 + deltaY / 2));
   BuildingContainer bContainer = gridBuildingAllocator->Create (gridWidth * gridHeight);
 
-  // std::cout << bContainer.GetN () << std::endl;
+  std::cout << bContainer.GetN () << std::endl;
 
   BuildingsHelper::Install (endDevices);
   BuildingsHelper::Install (gateways);
