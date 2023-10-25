@@ -1,5 +1,4 @@
 import numpy as np
-import os
 import pandas as pd
 
 from littoral.system.dap_vars import *
@@ -76,22 +75,12 @@ def normal_test(data):
     
     return False, p
 
-def full_normal_test(k, folder):
-    file = f'{data_dir}/{folder}/tracker_unconfirmed_buildings{k}gw.csv'
-    names=['Sent', 'Received', 'UL-PDR', 'RSSI', 'SNR', 'Delay']
-    df = pd.read_csv(file, names=names)
-    ps = {}
+def test_t(data, pop_mean):
+    from scipy.stats import ttest_1samp
 
-    for name in names:
-        if(name not in ['Sent', 'Received']):
-            data = df[name]
-            _, p = normal_test(data)
-            ps[name.lower()] = [p]
+    alpha = 0.05
+    _, p = ttest_1samp(data, popmean=pop_mean)
 
-    energy = compute_consumed_energy(ks=[k], folders=[folder])
-    energy_serie = pd.Series(energy[0])
-    _, p = normal_test(energy_serie)
-    ps['energy'] = p
+    return (p >= alpha), p
 
-    pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/p_values_{k}gws.csv', index=False)
 #####################
