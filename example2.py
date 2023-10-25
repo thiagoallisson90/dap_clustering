@@ -1,5 +1,6 @@
 from sklearn.cluster import KMeans
 from sklearn_extra.cluster import KMedoids
+import pandas as pd
 
 from littoral.system.dap_utils import generate_ed_coords, capex_opex_calc
 from littoral.system.dap_factory import KMeansFactory, KMedoidsFactory, CMeansFactory
@@ -8,7 +9,8 @@ from littoral.system.dap_plot import plot_clusters, plot_capex_opex, plot_dists,
 from littoral.system.dap_plot import metric_names, plot_metrics
 from littoral.system.dap_simulate import simulate
 from littoral.system.dap_elbow import CrispElbow, CMeansElbow, GKElbow
-from littoral.system.dap_utils import compute_consumed_energy, full_normal_test
+from littoral.system.dap_utils import compute_consumed_energy, normal_test, test_t
+from littoral.system.dap_vars import data_dir
 
 if __name__ == '__main__':
   coords = generate_ed_coords()
@@ -75,9 +77,6 @@ if __name__ == '__main__':
   df_sims = \
     [simulate(coords, clfs[i].cluster_centers, folders[i], load=load) for i in range(len(clfs))]  
 
-  for i in range(len(ks)):
-    full_normal_test(ks[i], folder=folders[i])
-
   for metric in metric_names:
     if(metric != 'energy'):
       plot_metrics[metric]([df[metric] for df in df_sims], names)
@@ -85,4 +84,41 @@ if __name__ == '__main__':
   energy_values = compute_consumed_energy(ks, folders=folders)
   plot_metrics['energy'](energy_values, names)
 
+  print('#########################################################################################')  
+  print('Normal and t-student tests')
+
+  sample_size = 5
+  pop_size = df.shape[0]
+  columns = ['ul-pdr', 'rssi', 'snr', 'delay', 'energy']
+
+  for i in range(len(ks)):
+    k = ks[i]
+    folder = folders[i]
+
+    df = df_sims[columns]
+    df['energy'] = energy_values[i]
+
+    print(f'{names[i]} Analysis:')
+
+    ps = {}
+    means = {}
+
+    for col in columns:
+      result = normal_test(df[col])
+      ps[col] = [result[1]]
+      if(result[0]):
+          print(f'{col} sample is normal, with p-value = {ps[col]}')
+      else:
+          print(f'{col} sample isn\'t normal, with p-value = {ps[col]}')
+    pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/normal_tests_{k}gws.csv', index=False)
+
+    for col in columns:
+      result = test_t(df[col][0:sample_size], df[col].mean())
+      means[col] = [result[1]]
+      if(result[0]):
+        print(f'Sample mean for {col} is equal population mean ({pop_size}), with p = {means[col]}')
+      else:
+        print(f'Sample mean for {col} isn\'t equal population mean ({pop_size}), with p = {means[col]}')
+    pd.DataFrame(means).to_csv(f'{data_dir}/{folder}/mean_tests_{k}gws.csv', index=False)
+    
   print('#########################################################################################')  
