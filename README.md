@@ -25,7 +25,7 @@ chmod +x dap_config.py
 2. [X] ~~Add elbow method based on the calinski harabasz score (calinski score almost always computes k equals to 10 or 15)~~.
 3. [X] ~~Add shapiro-wilk and lilliefors normal tests.~~
 4. [X] ~~Add WCSS analysis for the clusters.~~
-5. [X] Add t-student test.
+5. [X] ~~Add t-student test.~~
 6. [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
 7. [ ] Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.
 8. [ ] Create K-Means applying RSSI values as inputs.
