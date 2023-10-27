@@ -166,6 +166,23 @@ def plot_wcss(wcss, labels):
     plt.clf()
     plt.close('all')
 
+def plot_sf(sf, k, folder):
+    plt.figure(figsize=(12, 8))
+    plt.bar(['SF7', 'SF8', 'SF9', 'SF10', 'SF11', 'SF12'], sf, color=define_colors(len(sf)))
+    plt.xlabel('SFs', fontsize=14)
+    plt.ylabel('Quantity of SFs', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title('Chart of Distribution of the SFs', fontsize=16)
+
+    for i, value in enumerate(sf):
+        plt.text(i, value, f'{value}', ha='center', va='bottom', fontsize=12)
+
+    plt.savefig(f'{img_dir}/{folder}/{k}gw_sf.png')
+    plt.show()
+    #plt.clf()
+    #plt.close('all')
+
 def plot_metric(datas, labels, title_text, y_text, metric_name):
     plt.figure(figsize=(12, 8))    
     sns.boxplot(datas, width=0.5, palette=define_colors(len(labels)))
