@@ -179,9 +179,8 @@ def plot_sf(sf, k, folder):
         plt.text(i, value, f'{value}', ha='center', va='bottom', fontsize=12)
 
     plt.savefig(f'{img_dir}/{folder}/{k}gw_sf.png')
-    plt.show()
-    #plt.clf()
-    #plt.close('all')
+    plt.clf()
+    plt.close('all')
 
 def plot_metric(datas, labels, title_text, y_text, metric_name):
     plt.figure(figsize=(12, 8))    
