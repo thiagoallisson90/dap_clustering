@@ -26,8 +26,8 @@ chmod +x dap_config.py
 3. [X] ~~Add shapiro-wilk and lilliefors normal tests.~~
 4. [X] ~~Add WCSS analysis for the clusters.~~
 5. [X] ~~Add t-student test.~~
-6. [ ] Add parameter for simulation script set up the connections between the GWs and their respectives EDs.
-7. [ ] Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.
+6. [X] ~~Add parameter for simulation script set up the connections between the GWs and their respectives EDs.~~
+7. [X] ~~Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.~~
 8. [ ] Create K-Means applying RSSI values as inputs.
 9. [ ] Create K-Medoids applying RSSI values as inputs.
 10. [ ] Create Fuzzy C-Means applying RSSI values as inputs.

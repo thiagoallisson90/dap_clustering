@@ -55,21 +55,22 @@ double simulationTime = nDevices;
 double lambda = 1; // Traffic Load
 int nRun = 0;
 std::string clusteringModel = "kmeans";
+bool useConnFile = false;
 
 // Channel model
 int realisticChannelModel = 2;
 std::string models[] = {"baseline", "shadowing", "buildings"};
-int appPeriodSeconds = 4;
+int appPeriodSeconds = 1;
 
 // Output control
 bool print = true;
 
 // Files
-// Files
 std::string edPos = "";
 std::string edOutputFile = "";
 std::string gwPos = "";
 std::string baseDir = "/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/scratch/dap_clustering/";
+std::string connFile;
 
 // Traffic
 int traffic = 0;
@@ -194,6 +195,8 @@ main (int argc, char *argv[])
   cmd.AddValue ("nGateways", "Number of gateways", nGateways);
   cmd.AddValue ("cModel", "Clustering Model", clusteringModel);
   cmd.AddValue ("radius", "Size of the radius of the gateway cell", radius);
+  cmd.AddValue ("useConnFile", "Flag to set up to use file with connections", useConnFile);
+  cmd.AddValue ("connFile", "File name with connections", connFile);
   cmd.Parse (argc, argv);
 
   if(nRun > 0)
@@ -386,7 +389,7 @@ main (int argc, char *argv[])
       "MinY", DoubleValue (-gridHeight * (yLength + deltaY) / 2 + deltaY / 2));
   BuildingContainer bContainer = gridBuildingAllocator->Create (gridWidth * gridHeight);
 
-  std::cout << bContainer.GetN () << std::endl;
+  //std::cout << bContainer.GetN () << std::endl;
 
   BuildingsHelper::Install (endDevices);
   BuildingsHelper::Install (gateways);
@@ -410,19 +413,17 @@ main (int argc, char *argv[])
   /**********************************************
    *  Set up the end device's spreading factor  *
    **********************************************/
-  if (clusteringModel != "tests")
+  if (!useConnFile)
     {
       macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
     }
-  else
+  else if (useConnFile)
     {
-      Ptr<NetDevice> netDevice = endDevices.Get (0)->GetDevice (0);
-      Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
-      Ptr<ClassAEndDeviceLorawanMac> mac =
-          loraNetDevice->GetMac ()->GetObject<ClassAEndDeviceLorawanMac> ();
-      mac->SetDataRate (0);
+      std::string s = "/" + std::to_string(nGateways) + "gw_";
+      std::string outputFile = baseDir + "data/" + clusteringModel + s + "sf.csv";
+      macHelper.SetSpreadingFactorsFromFile (endDevices, gateways, channel, connFile, outputFile);
     }
-
+  
   NS_LOG_DEBUG ("Completed configuration");
 
   /*********************************************

@@ -6,10 +6,10 @@ from littoral.system.dap_vars import ed_pos_file, ed_out_file, gw_pos_file
 from littoral.system.dap_vars import data_dir, ns3_cmd
 
 def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, 
-             gw_pos_file=gw_pos_file, radius=10000, load=5):
+             gw_pos_file=gw_pos_file, radius=10000, load=5, useConnFile=0, connFile=''):
     script='scratch/dap_clustering/dap_clustering.cc'
     n_gw = len(centroids)
-    n_simulatons = 30
+    n_simulatons = 1
 
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
@@ -20,10 +20,10 @@ def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_
 
     params01 = f'--edPos={ed_pos_file} --edOutputFile={ed_out_file} --gwPos={gw_pos_file} --nGateways={n_gw}'
     params02 = f'--cModel={folder} --radius={radius} --nDevices={len(coords)} --lambda={load}'
+    params03 = f'--useConnFile={useConnFile} --connFile={connFile}'
 
     for i in range(1, n_simulatons+1):
-        run_cmd = \
-            f'{ns3_cmd} run "{script} {params01} {params02} --nRun={i}"'
+        run_cmd = f'{ns3_cmd} run "{script} {params01} {params02} {params03} --nRun={i}"'
         os.system(run_cmd)
     
     col_names = ['sent', 'received', 'ul-pdr', 'rssi', 'snr', 'delay']
