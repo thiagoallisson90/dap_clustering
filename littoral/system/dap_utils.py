@@ -83,8 +83,8 @@ def test_t(data, pop_mean):
 
     return (p >= alpha), p
 
-def compute_sf(k, folder):
+def compute_sf(k, folder, n_sims=30):
     df = pd.read_csv(f'{data_dir}/{folder}/{k}gw_sf.csv', names=['ED', 'GW', 'RX', 'SF'])
-    return np.bincount(df['SF'])[7:13]
+    return np.round(df['SF'].value_counts() / n_sims)
 
 #####################
