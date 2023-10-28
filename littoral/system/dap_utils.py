@@ -87,4 +87,43 @@ def compute_sf(k, folder, n_sims=30):
     df = pd.read_csv(f'{data_dir}/{folder}/{k}gw_sf.csv', names=['ED', 'GW', 'RX', 'SF'])
     return np.round(df['SF'].value_counts() / n_sims)
 
+def run_sf_and_tests(df_sims, ks, folders, energy_values, names):
+    from littoral.system.dap_plot import plot_sf
+
+    sample_size = 5
+    pop_size = df_sims[0].shape[0]
+    columns = ['ul-pdr', 'rssi', 'snr', 'delay']
+
+    for i in range(len(ks)):
+        k = ks[i]
+        folder = folders[i]
+
+        plot_sf(compute_sf(k, folder), k, folder)
+
+        df_final = df_sims[i][columns].copy()
+        df_final['energy'] = energy_values[i]
+
+        print(f'{names[i]} Analysis:')
+
+        ps = {}
+        means = {}
+
+        for col in df_final.columns:
+            result = normal_test(df_final[col])
+            ps[col] = [result[1]]
+            if(result[0]):
+                print(f'{col} sample is normal, with p-value = {ps[col]}')
+            else:
+                print(f'{col} sample isn\'t normal, with p-value = {ps[col]}')
+        pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/normal_tests_{k}gws.csv', index=False)
+
+        for col in df_final.columns:
+            result = test_t(df_final[col][0:sample_size], df_final[col].mean())
+            means[col] = [result[1]]
+            if(result[0]):
+                print(f'Sample mean for {col} is equal population mean ({pop_size}), with p = {means[col]}')
+            else:
+                print(f'Sample mean for {col} isn\'t equal population mean ({pop_size}), with p = {means[col]}')
+        pd.DataFrame(means).to_csv(f'{data_dir}/{folder}/mean_tests_{k}gws.csv', index=False)
+
 #####################

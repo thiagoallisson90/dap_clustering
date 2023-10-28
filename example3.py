@@ -6,10 +6,11 @@ from littoral.system.dap_utils import generate_ed_coords, capex_opex_calc
 from littoral.system.dap_factory import KMeansFactory, KMedoidsFactory, CMeansFactory
 from littoral.system.dap_factory import GKFactory, RandFactory
 from littoral.system.dap_plot import plot_clusters, plot_capex_opex, plot_dists, plot_wcss
-from littoral.system.dap_plot import metric_names, plot_metrics
+from littoral.system.dap_plot import metric_names, plot_metrics, plot_sf
 from littoral.system.dap_simulate import simulate
 from littoral.system.dap_elbow import CrispElbow, CMeansElbow, GKElbow
 from littoral.system.dap_utils import compute_consumed_energy, normal_test, test_t
+from littoral.system.dap_utils import run_sf_and_tests
 from littoral.system.dap_vars import data_dir
 
 if __name__ == '__main__':
@@ -75,50 +76,19 @@ if __name__ == '__main__':
   #load = 1 / (5 * 60) # 1pkt/5min -> 1pkt/300s
   load = 1
   df_sims = \
-    [simulate(coords, clfs[i].cluster_centers, folders[i], load=load) for i in range(len(clfs))]  
+    [simulate(coords, clfs[i].cluster_centers, folders[i], load=load, setUpSF=1, 
+              connFile=f'{data_dir}/{folders[i]}/{ks[i]}gw_labels.csv') for i in range(len(clfs))]  
 
-  for metric in metric_names:
-    if(metric != 'energy'):
-      plot_metrics[metric]([df[metric] for df in df_sims], names)
+  for m in metric_names:
+    if(m != 'energy'):
+      plot_metrics[m]([df[m] for df in df_sims], names)
 
   energy_values = compute_consumed_energy(ks, folders=folders)
   plot_metrics['energy'](energy_values, names)
 
   print('#########################################################################################')  
-  print('Normal and t-student tests')
+  print('Normal and T tests, as well as SF analysis')
 
-  sample_size = 5
-  pop_size = df.shape[0]
-  columns = ['ul-pdr', 'rssi', 'snr', 'delay', 'energy']
+  run_sf_and_tests(df_sims, ks, folders, energy_values, names)
 
-  for i in range(len(ks)):
-    k = ks[i]
-    folder = folders[i]
-
-    df = df_sims[columns]
-    df['energy'] = energy_values[i]
-
-    print(f'{names[i]} Analysis:')
-
-    ps = {}
-    means = {}
-
-    for col in columns:
-      result = normal_test(df[col])
-      ps[col] = [result[1]]
-      if(result[0]):
-          print(f'{col} sample is normal, with p-value = {ps[col]}')
-      else:
-          print(f'{col} sample isn\'t normal, with p-value = {ps[col]}')
-    pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/normal_tests_{k}gws.csv', index=False)
-
-    for col in columns:
-      result = test_t(df[col][0:sample_size], df[col].mean())
-      means[col] = [result[1]]
-      if(result[0]):
-        print(f'Sample mean for {col} is equal population mean ({pop_size}), with p = {means[col]}')
-      else:
-        print(f'Sample mean for {col} isn\'t equal population mean ({pop_size}), with p = {means[col]}')
-    pd.DataFrame(means).to_csv(f'{data_dir}/{folder}/mean_tests_{k}gws.csv', index=False)
-    
-  print('#########################################################################################')  
+  print('#########################################################################################')
