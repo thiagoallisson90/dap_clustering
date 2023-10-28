@@ -55,7 +55,7 @@ double simulationTime = nDevices;
 double lambda = 1; // Traffic Load
 int nRun = 0;
 std::string clusteringModel = "kmeans";
-bool useConnFile = false;
+int setUpSF = 0; // 0: SetSpreadingFactorsUp, 1: SetSpreadingFactorsFromFile
 
 // Channel model
 int realisticChannelModel = 2;
@@ -195,7 +195,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("nGateways", "Number of gateways", nGateways);
   cmd.AddValue ("cModel", "Clustering Model", clusteringModel);
   cmd.AddValue ("radius", "Size of the radius of the gateway cell", radius);
-  cmd.AddValue ("useConnFile", "Flag to set up to use file with connections", useConnFile);
+  cmd.AddValue ("setUpSF", "Flag to define set up to SF method", setUpSF);
   cmd.AddValue ("connFile", "File name with connections", connFile);
   cmd.Parse (argc, argv);
 
@@ -413,11 +413,11 @@ main (int argc, char *argv[])
   /**********************************************
    *  Set up the end device's spreading factor  *
    **********************************************/
-  if (!useConnFile)
+  if (setUpSF == 0)
     {
       macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
     }
-  else if (useConnFile)
+  else if (setUpSF == 1)
     {
       std::string s = "/" + std::to_string(nGateways) + "gw_";
       std::string outputFile = baseDir + "data/" + clusteringModel + s + "sf.csv";
