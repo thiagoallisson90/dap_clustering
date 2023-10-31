@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import pandas as pd
 
@@ -34,3 +35,39 @@ def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_
     
     col_names = ['sent', 'received', 'ul-pdr', 'rssi', 'snr', 'delay']
     return pd.read_csv(filename, names=col_names)
+
+def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_file=gw_pos_file, 
+                   radius=10000):
+    script = 'scratch/rssi.cc'
+    n_gw = len(centroids)
+    n_simulatons = 5
+
+    write_coords(coords, ed_pos_file)
+    write_coords(centroids, gw_pos_file)
+    
+    filename = f'{data_dir}/tests/{cmodel}_tracker_{n_gw}gw.csv'
+    with open(filename, mode="w") as file:
+        file.write('')
+        file.close()
+
+    params01 = f'--edPosA={ed_pos_file} --gwPosA={gw_pos_file} --nGWs={n_gw}'
+    params02 = f'--cModel={cmodel} --size={radius} --nDevs={len(coords)}'
+
+    for i in range(1, n_simulatons+1):
+        run_cmd = f'{ns3_cmd} run "{script} {params01} {params02} --numberRun={i}"'
+        os.system(run_cmd)
+    
+    names = [f'rssi{i}' for i in range(n_gw)]
+    df = pd.read_csv(f'{data_dir}/tests/kmeans_tracker_{n_gw}gw.csv', names=names)
+    n_rows = len(coords)
+    result = np.zeros((n_rows, n_gw))
+
+    for i in range(df.shape[0]):
+        row = i % n_rows
+        j = 0
+        for col in df.columns:
+            result[row][j] = result[row][j] + df[col][i]
+            j =j + 1
+    
+    result = result / n_simulatons
+    return pd.DataFrame(result, columns=names)
