@@ -7,7 +7,7 @@ from littoral.system.dap_vars import ed_pos_file, ed_out_file, gw_pos_file
 from littoral.system.dap_vars import data_dir, ns3_cmd
 
 def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_out_file, 
-             gw_pos_file=gw_pos_file, radius=10000, load=5, setUpSF=0, connFile=''):
+             gw_pos_file=gw_pos_file, radius=10000, load=1, setUpSF=0, connFile=''):
     script='scratch/dap_clustering/dap_clustering.cc'
     n_gw = len(centroids)
     n_simulatons = 30
@@ -45,7 +45,7 @@ def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_fi
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
     
-    filename = f'{data_dir}/tests/{cmodel}_tracker_{n_gw}gw.csv'
+    filename = f'{data_dir}/{cmodel}/tracker_{n_gw}gw.csv'
     with open(filename, mode="w") as file:
         file.write('')
         file.close()
