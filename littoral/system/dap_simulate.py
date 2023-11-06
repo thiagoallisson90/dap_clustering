@@ -20,8 +20,8 @@ def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_
         file.write('')
         file.close()
     
-    filename = f'{data_dir}/{folder}/{n_gw}gw_sf.csv'
-    with open(filename, mode="w") as file:
+    sf_filename = f'{data_dir}/{folder}/{n_gw}gw_sf.csv'
+    with open(sf_filename, mode="w") as file:
         file.write('')
         file.close()
 
