@@ -83,12 +83,12 @@ if __name__ == '__main__':
     if(m != 'energy'):
       plot_metrics[m]([df[m] for df in df_sims], names)
 
-  energy_values = compute_consumed_energy(ks, folders=folders)
+  energy_values = [compute_consumed_energy(ks[i], folder=folders[i]) for i in range(len(ks))]
   plot_metrics['energy'](energy_values, names)
 
   print('#########################################################################################')  
   print('Normal and T tests, as well as SF analysis')
-
+  
   run_sf_and_tests(df_sims, ks, folders, energy_values, names)
 
   print('#########################################################################################')

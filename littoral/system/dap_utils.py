@@ -42,21 +42,17 @@ def define_colors(k, seed=42):
     np.random.seed(None)
     return colors
 
-def compute_consumed_energy(ks, folders, data_dir=data_dir, n_reps=30):
+def compute_consumed_energy(k, folder, data_dir=data_dir, n_reps=30):
     initial_energy = 10000 # in J
-    col_names = ['uid', 'remainder_energy']
+    names = ['uid', 'remainder_energy']
+    consumed_energy = []
 
-    energy_values = [0 for _ in ks]
-    for j in range(len(ks)):
-        k = ks[j]
-        folder = folders[j]
-        dfs = \
-            [pd.read_csv(f'{data_dir}/{folder}/nRun_{i}_{k}gws_battery-level.txt', names=col_names) \
-                for i in range(1, n_reps+1)]
-        
-        energy_values[j] = [initial_energy - df['remainder_energy'].mean() for df in dfs]
+    for i in range(1, n_reps+1):
+        df = pd.read_csv(f'{data_dir}/{folder}/nRun_{i}_{k}gws_battery-level.txt', 
+                         names=names)     
+        consumed_energy.append((initial_energy - df['remainder_energy'].mean()))
 
-    return energy_values
+    return consumed_energy
 
 def normal_test(data):
     alpha = 0.05
@@ -94,36 +90,38 @@ def run_sf_and_tests(df_sims, ks, folders, energy_values, names):
     pop_size = df_sims[0].shape[0]
     columns = ['ul-pdr', 'rssi', 'snr', 'delay']
 
-    for i in range(len(ks)):
+    for i in range(len(df_sims)):
         k = ks[i]
         folder = folders[i]
 
         plot_sf(compute_sf(k, folder), k, folder)
 
-        df_final = df_sims[i][columns].copy()
-        df_final['energy'] = energy_values[i]
-
         print(f'{names[i]} Analysis:')
 
         ps = {}
         means = {}
+        energy = energy_values[i]
 
-        for col in df_final.columns:
-            result = normal_test(df_final[col])
+        for col in columns:
+            result = normal_test(df_sims[i][col])
             ps[col] = [result[1]]
             if(result[0]):
                 print(f'{col} sample is normal, with p-value = {ps[col]}')
             else:
                 print(f'{col} sample isn\'t normal, with p-value = {ps[col]}')
+        
+        ps['energy'] = [normal_test(energy)[1]]
         pd.DataFrame(ps).to_csv(f'{data_dir}/{folder}/normal_tests_{k}gws.csv', index=False)
 
-        for col in df_final.columns:
-            result = test_t(df_final[col][0:sample_size], df_final[col].mean())
+        for col in columns:
+            result = test_t(df_sims[i][col][0:sample_size], df_sims[i][col].mean())
             means[col] = [result[1]]
             if(result[0]):
                 print(f'Sample mean for {col} is equal population mean ({pop_size}), with p = {means[col]}')
             else:
                 print(f'Sample mean for {col} isn\'t equal population mean ({pop_size}), with p = {means[col]}')
+
+        means['energy'] = [test_t(energy[0:sample_size], np.mean(energy))[1]]
         pd.DataFrame(means).to_csv(f'{data_dir}/{folder}/mean_tests_{k}gws.csv', index=False)
 
 #####################

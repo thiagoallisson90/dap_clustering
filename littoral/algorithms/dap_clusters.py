@@ -1,5 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
+from littoral.system.dap_simulate import simulate_tests
 
 """
 - Code based on Implement Clustering Algorithms from Scratch
@@ -13,6 +14,7 @@ class DapKMeans:
         self.verbose = verbose
 
     def fit(self, data):
+        np.random.seed(None)
         self.data = data  
         N = data.shape[0]
         self.distances = np.zeros((N, self.k))
@@ -24,8 +26,13 @@ class DapKMeans:
         old_labels = np.empty(N)
 
         for i in range(self.max_iter):
-            self.distances = np.linalg.norm(self.data[:, None, :] - centroids, axis=2)
-            labels = np.argmin(self.distances, axis=1)
+            # self.distances = simulate(coords, centroid, n_reps=5)
+            # simulate() => mean(rssi)
+            # A point is allocated to one cluster if the RSSI is higher than the attained of the others clusters
+            # self.distances = np.linalg.norm(self.data[:, None, :] - centroids, axis=2)
+            self.distances = simulate_tests(self.data, centroids, 'kmeans_rssi').to_numpy()
+            # labels = np.argmin(self.distances, axis=1)
+            labels = np.argmax(self.distances, axis=1)
 
             for j in range(self.k):
                 centroids[j] = np.mean(self.data[labels == j], axis=0)
@@ -104,61 +111,4 @@ class DapKMedoids:
 
     def get_clusters(self):
         return self.labels, self.medoids, self.medoid_history, self.clusters
-
-if __name__ == '__main__':
-    from sklearn_extra.cluster import KMedoids
-    from test_cluster import generate_ed_coords
-    from scipy.spatial.distance import euclidean
-    from yellowbrick.cluster import KElbowVisualizer
-    from sklearn.metrics import calinski_harabasz_score
-
-    max_dist = 2000
-    max_clusters = 30
-    coords = generate_ed_coords()
-    ks = []
-
-    for k in range(1, max_clusters+1):
-        model = KMedoids(k)
-        model.fit(coords)
-
-        centroids = model.cluster_centers_
-        clusters = [[] for _ in range(k)]
-        insert = True
-        for i, label in enumerate(model.labels_):
-            clusters[label].append(euclidean(coords[i], centroids[label]))
-            if(max(clusters[label]) > max_dist):
-                print(k, label, max(clusters[label]))
-                insert = False
-                break
-        
-        if(insert):
-            ks.append(k)
-    
-    print(ks)
-
-    elbows = []
-    scores = []
-    for i in range(30):
-        vis = KElbowVisualizer(KMedoids(), metric='silhouette', k=ks, timings=False)
-        vis.fit(coords)
-        elbows.append(vis.elbow_value_)
-        scores.append(vis.elbow_score_)
-        plt.clf()
-
-    idx = np.argmax(scores)
-    print(idx, elbows[idx], scores[idx])
-    
-    model = KMedoids(elbows[idx])
-    model.fit(coords)
-    score = calinski_harabasz_score(coords, model.labels_)
-    print(f'score = {score}')
-
-    centroids = model.cluster_centers_
-    clusters = [[] for _ in range(elbows[idx])]
-    for i, label in enumerate(model.labels_):
-        clusters[label].append(euclidean(coords[i], centroids[label]))
-
-    for cluster in clusters:
-        print(max(cluster))
-
 
