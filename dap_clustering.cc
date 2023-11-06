@@ -200,7 +200,9 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   if(nRun > 0)
-    RngSeedManager::SetRun(nRun);    
+    {
+      RngSeedManager::SetRun(nRun);    
+    }
 
   simulationTime = nDevices;
   appPeriodSeconds = simulationTime / lambda;

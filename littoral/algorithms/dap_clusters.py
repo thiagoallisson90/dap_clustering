@@ -14,7 +14,6 @@ class DapKMeans:
         self.verbose = verbose
 
     def fit(self, data):
-        np.random.seed(None)
         self.data = data  
         N = data.shape[0]
         self.distances = np.zeros((N, self.k))
