@@ -58,7 +58,7 @@ def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_fi
         os.system(run_cmd)
     
     names = [f'rssi{i}' for i in range(n_gw)]
-    df = pd.read_csv(f'{data_dir}/tests/kmeans_tracker_{n_gw}gw.csv', names=names)
+    df = pd.read_csv(f'{data_dir}/{cmodel}/tracker_{n_gw}gw.csv', names=names)
     n_rows = len(coords)
     result = np.zeros((n_rows, n_gw))
 
@@ -67,7 +67,7 @@ def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_fi
         j = 0
         for col in df.columns:
             result[row][j] = result[row][j] + df[col][i]
-            j =j + 1
+            j = j + 1
     
     result = result / n_simulatons
     return pd.DataFrame(result, columns=names)
