@@ -11,7 +11,7 @@ ed_out_file = 'ed_out_file.csv'
 gw_pos_file = 'gw_pos_file.csv'
 ns3_cmd = '/home/thiago/Documentos/Doutorado/Simuladores/ns-3-dev/./ns3'
 clustering_models = \
-  ['kmeans', 'kmedoids', 'cmeans', 'gk', 'rand', 'tests', 'kmeans_rssi', 'kmedoids_rssi']
+  ['kmeans', 'kmedoids', 'cmeans', 'gk', 'rand', 'tests', 'kmeans_rssi', 'kmedoids_rssi', 'cmeans_rssi']
 model_names = {
   'kmeans': 'K-Means',
   'kmedoids': 'K-Medoids',
