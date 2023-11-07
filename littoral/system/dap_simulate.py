@@ -40,7 +40,7 @@ def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_fi
                    radius=10000):
     script = 'scratch/rssi.cc'
     n_gw = len(centroids)
-    n_simulatons = 5
+    n_simulations = 30
 
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
@@ -53,7 +53,7 @@ def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_fi
     params01 = f'--edPosA={ed_pos_file} --gwPosA={gw_pos_file} --nGWs={n_gw}'
     params02 = f'--cModel={cmodel} --size={radius} --nDevs={len(coords)}'
 
-    for i in range(1, n_simulatons+1):
+    for i in range(1, n_simulations+1):
         run_cmd = f'{ns3_cmd} run "{script} {params01} {params02} --numberRun={i}"'
         os.system(run_cmd)
     
@@ -69,5 +69,5 @@ def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_fi
             result[row][j] = result[row][j] + df[col][i]
             j = j + 1
     
-    result = result / n_simulatons
+    result = result / n_simulations
     return pd.DataFrame(result, columns=names)
