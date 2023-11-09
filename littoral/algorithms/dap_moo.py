@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from pymoo.core.problem import Problem
-from ns3_utils import generate_ed_coords, simulate, data_dir
+from littoral.system.dap_utils import generate_ed_coords, simulate, data_dir
 
 class DapPlacement(Problem):
 
