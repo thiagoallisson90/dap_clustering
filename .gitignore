@@ -7,5 +7,8 @@ data
 imgs
 
 tests.py
+test*
 ed_pos_file.csv
 gw_pos_file.csv
+
+report.log

@@ -28,9 +28,11 @@ chmod +x dap_config.py
 5. [X] ~~Add t-student test.~~
 6. [X] ~~Add parameter for simulation script set up the connections between the GWs and their respectives EDs.~~
 7. [X] ~~Create method in the lorawan-mac-helper file to set up the ED SF based on the conections established.~~
-8. [ ] Create K-Means applying RSSI values as inputs.
+8. [X] ~~Create K-Means applying RSSI values as inputs.~~
 9. [ ] Create K-Medoids applying RSSI values as inputs.
-10. [ ] Create Fuzzy C-Means applying RSSI values as inputs.
+10. [X] ~~Create Fuzzy C-Means applying RSSI values as inputs.~~
 11. [ ] Create Gustafson-Kessel applying RSSI values as inputs.
-12. [ ] Create clustering algorithm based on the NSGA-II, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
-13. [ ] Create clustering algorithm based on the MO-PSO, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
+12. [ ] Create PSO Clustering Algorithm.
+13. [ ] Create AcoR (ACO for Continuos Domain) Clustering Algorithm.
+14. [ ] Create clustering algorithm based on the NSGA-II, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
+15. [ ] Create clustering algorithm based on the MO-PSO, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
