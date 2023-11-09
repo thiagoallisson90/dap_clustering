@@ -37,10 +37,9 @@ def simulate(coords, centroids, folder, ed_pos_file=ed_pos_file, ed_out_file=ed_
     return pd.read_csv(filename, names=col_names)
 
 def simulate_tests(coords, centroids, cmodel, ed_pos_file=ed_pos_file, gw_pos_file=gw_pos_file, 
-                   radius=10000):
+                   radius=10000, n_simulations=5):
     script = 'scratch/rssi.cc'
     n_gw = len(centroids)
-    n_simulations = 5
 
     write_coords(coords, ed_pos_file)
     write_coords(centroids, gw_pos_file)
