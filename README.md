@@ -32,7 +32,7 @@ chmod +x dap_config.py
 9. [ ] Create K-Medoids applying RSSI values as inputs.
 10. [X] ~~Create Fuzzy C-Means applying RSSI values as inputs.~~
 11. [ ] Create Gustafson-Kessel applying RSSI values as inputs.
-12. [ ] Create PSO Clustering Algorithm.
+12. [X] ~~Create PSO Clustering Algorithm.~~
 13. [ ] Create AcoR (ACO for Continuos Domain) Clustering Algorithm.
 14. [ ] Create clustering algorithm based on the NSGA-II, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
 15. [ ] Create clustering algorithm based on the MO-PSO, applied to define the GWs placements, in order to maximize RSSI and UL-PDR metrics.
